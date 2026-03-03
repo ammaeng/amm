@@ -307,6 +307,10 @@
               <input type="date" class="form-control" id="dcDate" onchange="calculateLOSPreview()">
             </div>
             <div class="col-6 col-md-3">
+  <label class="form-label">F/U</label>
+  <input type="text" class="form-control" id="fu" placeholder="เช่น นัด 7 วัน / OPD / โทรติดตาม">
+</div>
+            <div class="col-6 col-md-3">
               <label class="form-label">LOS (Preview)</label>
               <input type="text" class="form-control text-center fw-bold" id="los" readonly>
             </div>
@@ -797,6 +801,7 @@
     document.getElementById('dx2').value = r[19] || "";
 
     document.getElementById('dcDate').value = formatDateForInput(r[20]);
+    document.getElementById('fu').value = r[21] || "";
     document.getElementById('admitUnder6').value = r[22] || "";
     document.getElementById('deathDate').value = formatDateForInput(r[30]);
     document.getElementById('transferOutDate').value = formatDateForInput(r[25]);
@@ -860,6 +865,8 @@
       address: document.getElementById('address').value,
 
       los: document.getElementById('los').value,
+        fu: document.getElementById('fu').value,
+
       admitUnder6: document.getElementById('admitUnder6').value,
 
       dcDate: formatDateForSheet(document.getElementById('dcDate').value),
