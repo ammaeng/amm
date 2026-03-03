@@ -313,46 +313,98 @@ function showFullReport() {
       new bootstrap.Modal(document.getElementById('reportModal')).show();
     });
   }
-  function editPatient(item) {
-    const r = item.rawData; document.getElementById('rowId').value = item.rowId; document.getElementById('seq').value = r[1];
+function editPatient(item) {
+    const r = item.rawData; 
+    document.getElementById('rowId').value = item.rowId; 
+    document.getElementById('seq').value = r[1];
     document.getElementById('patientStatusStored').value = r[0];
-    document.getElementById('prefix').value = r[32] || 'นาย'; document.getElementById('patientName').value = r[11]; document.getElementById('gender').value = r[33] || 'ชาย';
+    document.getElementById('prefix').value = r[32] || 'นาย'; 
+    document.getElementById('patientName').value = r[11]; 
+    document.getElementById('gender').value = r[33] || 'ชาย';
+    
     const am = (r[12]||"").match(/(\d+) ปี (\d+) เดือน (\d+) วัน/);
-    if(am){ document.getElementById('ageYear').value=am[1]; document.getElementById('ageMonth').value=am[2]; document.getElementById('ageDay').value=am[3]; }
-    document.getElementById('inDate').value = formatDateForInput(r[2]||r[5]||r[8]); document.getElementById('inTime').value = formatTimeForInput(r[3]||r[6]||r[9]);
-    document.getElementById('hn').value = r[13]; document.getElementById('an').value = r[14];
-    document.getElementById('ward').value = r[15]; document.getElementById('sai').value = r[16];
-    document.getElementById('sithi').value = r[17]; document.getElementById('dx1').value = r[18];
-    document.getElementById('dx2').value = r[19]; document.getElementById('dcDate').value = formatDateForInput(r[20]);
-    document.getElementById('los').value = item.displayLOS; document.getElementById('admitUnder6').value = r[22];
-    document.getElementById('deathDate').value = formatDateForInput(r[30]);
-    document.getElementById('transferOutDate').value = formatDateForInput(r[25]); document.getElementById('transferOut').value = r[24];
-    document.getElementById('abscondDate').value = formatDateForInput(r[26]); document.getElementById('refuseDate').value = formatDateForInput(r[27]);
-    document.getElementById('referOutDate').value = formatDateForInput(r[28]); document.getElementById('referDestination').value = r[29];
-    document.getElementById('address').value = r[31];
-    new bootstrap.Tab(document.querySelector('button[data-bs-target="#form-pane"]')).show(); window.scrollTo(0,0);
-  }
+    if(am){ 
+        document.getElementById('ageYear').value=am[1]; 
+        document.getElementById('ageMonth').value=am[2]; 
+        document.getElementById('ageDay').value=am[3]; 
+    }
+    
+    // ตั้งค่าประเภทการรับ วันที่ เวลา และ "ต้นทาง"
+    if(r[2]) document.getElementById('inType').value = "รับใหม่";
+    else if(r[5]) document.getElementById('inType').value = "รับย้าย";
+    else if(r[8]) document.getElementById('inType').value = "รับ Refer";
 
-  document.getElementById('dataForm').addEventListener('submit', async (e) => {
-    e.preventDefault(); Swal.fire({ title: 'บันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    document.getElementById('inDate').value = formatDateForInput(r[2]||r[5]||r[8]); 
+    document.getElementById('inTime').value = formatTimeForInput(r[3]||r[6]||r[9]);
+    
+    // --- เพิ่มบรรทัดนี้เพื่อดึง "ต้นทาง" กลับมาแสดง ---
+    document.getElementById('inDept').value = r[4] || r[7] || r[10] || ""; 
+    
+    document.getElementById('hn').value = r[13]; 
+    document.getElementById('an').value = r[14];
+    document.getElementById('ward').value = r[15]; 
+    document.getElementById('sai').value = r[16];
+    document.getElementById('sithi').value = r[17]; 
+    document.getElementById('dx1').value = r[18];
+    document.getElementById('dx2').value = r[19]; 
+    document.getElementById('dcDate').value = formatDateForInput(r[20]);
+    document.getElementById('los').value = item.displayLOS; 
+    document.getElementById('admitUnder6').value = r[22];
+    document.getElementById('deathDate').value = formatDateForInput(r[30]);
+    document.getElementById('transferOutDate').value = formatDateForInput(r[25]); 
+    document.getElementById('transferOut').value = r[24];
+    document.getElementById('abscondDate').value = formatDateForInput(r[26]); 
+    document.getElementById('refuseDate').value = formatDateForInput(r[27]);
+    document.getElementById('referOutDate').value = formatDateForInput(r[28]); 
+    document.getElementById('referDestination').value = r[29];
+    document.getElementById('address').value = r[31];
+    
+    new bootstrap.Tab(document.querySelector('button[data-bs-target="#form-pane"]')).show(); 
+    window.scrollTo(0,0);
+  }
+document.getElementById('dataForm').addEventListener('submit', async (e) => {
+    e.preventDefault(); 
+    Swal.fire({ title: 'บันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    const age = `${document.getElementById('ageYear').value} ปี ${document.getElementById('ageMonth').value} เดือน ${document.getElementById('ageDay').value} วัน`;
     const formData = {
       rowId: document.getElementById('rowId').value, seq: document.getElementById('seq').value,
       patientStatus: document.getElementById('patientStatusStored').value,
       prefix: document.getElementById('prefix').value, patientName: document.getElementById('patientName').value, gender: document.getElementById('gender').value,
-      age: `${document.getElementById('ageYear').value} ปี ${document.getElementById('ageMonth').value} เดือน ${document.getElementById('ageDay').value} วัน`,
-      hn: document.getElementById('hn').value, an: document.getElementById('an').value,
+      age: age, hn: document.getElementById('hn').value, an: document.getElementById('an').value,
       ward: document.getElementById('ward').value, sai: document.getElementById('sai').value, sithi: document.getElementById('sithi').value,
       dx1: document.getElementById('dx1').value, dx2: document.getElementById('dx2').value, address: document.getElementById('address').value,
-      los: document.getElementById('los').value, admitUnder6: document.getElementById('admitUnder6').value, dcDate: formatDateForSheet(document.getElementById('dcDate').value),
-      deathDate: formatDateForSheet(document.getElementById('deathDate').value), transferOutDate: formatDateForSheet(document.getElementById('transferOutDate').value),
-      transferOut: document.getElementById('transferOut').value, abscondDate: formatDateForSheet(document.getElementById('abscondDate').value),
-      refuseDate: formatDateForSheet(document.getElementById('refuseDate').value), referOutDate: formatDateForSheet(document.getElementById('referOutDate').value),
+      los: document.getElementById('los').value, admitUnder6: document.getElementById('admitUnder6').value, 
+      dcDate: formatDateForSheet(document.getElementById('dcDate').value),
+      deathDate: formatDateForSheet(document.getElementById('deathDate').value), 
+      transferOutDate: formatDateForSheet(document.getElementById('transferOutDate').value),
+      transferOut: document.getElementById('transferOut').value, 
+      abscondDate: formatDateForSheet(document.getElementById('abscondDate').value),
+      refuseDate: formatDateForSheet(document.getElementById('refuseDate').value), 
+      referOutDate: formatDateForSheet(document.getElementById('referOutDate').value),
       referDestination: document.getElementById('referDestination').value
     };
-    const iD = formatDateForSheet(document.getElementById('inDate').value), iT = document.getElementById('inTime').value, inT = document.getElementById('inType').value;
-    if(inT==="รับใหม่"){ formData.newMark=iD; formData.newTime=iT; } else if(inT==="รับย้าย"){ formData.transferMark=iD; formData.transferTime=iT; } else { formData.referMark=iD; formData.referTime=iT; }
+    
+    const iDate = formatDateForSheet(document.getElementById('inDate').value);
+    const iTime = document.getElementById('inTime').value;
+    
+    // --- แก้ไขตรงนี้: ดึงค่าจากช่อง inDept ด้วย ---
+    const iDept = document.getElementById('inDept').value; 
+    const inT = document.getElementById('inType').value;
+    
+    // และส่ง iDept เข้าไปให้ตรงกับประเภทการรับ
+    if (inT === "รับใหม่") { 
+        formData.newMark = iDate; formData.newTime = iTime; formData.newDept = iDept; 
+    } else if (inT === "รับย้าย") { 
+        formData.transferMark = iDate; formData.transferTime = iTime; formData.transferDept = iDept; 
+    } else { 
+        formData.referMark = iDate; formData.referTime = iTime; formData.referDept = iDept; 
+    }
+    
     await callApi('processData', { targetSheet: currentSheet, formData: formData });
-    Swal.fire('สำเร็จ', '', 'success'); loadDashboard(); new bootstrap.Tab(document.querySelector('button[data-bs-target="#list-pane"]')).show();
+    Swal.fire('สำเร็จ', '', 'success'); 
+    loadDashboard(); 
+    new bootstrap.Tab(document.querySelector('button[data-bs-target="#list-pane"]')).show();
   });
 
   async function closeMonthUI() {
