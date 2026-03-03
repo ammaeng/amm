@@ -2,14 +2,14 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>ระบบทะเบียนผู้ป่วย Cloud V.Ultimate (Logic 7+4 Fix)</title>
+  <title>ระบบทะเบียนผู้ป่วย Cloud V.Ultimate (Full Stack Fix)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <!-- CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
-  <!-- JS Scripts -->
+  <!-- JS Scripts (Ordered) -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -35,7 +35,7 @@
   <!-- Top Bar -->
   <div class="card p-3 mb-3 border-0 shadow-sm">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-      <div><h4 class="text-primary fw-bold m-0">ระบบทะเบียนผู้ป่วย</h4><div id="currentTime" class="text-muted small"></div></div>
+      <div><h4 class="text-primary fw-bold m-0 h-title">ระบบทะเบียนผู้ป่วย</h4><div id="currentTime" class="text-muted small"></div></div>
       <div class="d-flex align-items-center gap-2">
         <select id="sheetSelector" class="form-select form-select-sm" style="width: 170px;" onchange="onSheetChange()"></select>
         <button class="btn btn-sm btn-success rounded-pill px-3" onclick="showFullReport()">รายงานสรุปเดือน</button>
@@ -44,6 +44,7 @@
     </div>
   </div>
 
+  <!-- Mini Dashboard -->
   <div class="row g-3 mb-3 text-center">
     <div class="col-12 col-lg-8"><div class="card p-3 h-100 border-0 shadow-sm"><div class="row g-2"><div class="col-6"><canvas id="chartSithi" style="max-height: 160px;"></canvas></div><div class="col-6"><canvas id="chartSai" style="max-height: 160px;"></canvas></div></div></div></div>
     <div class="col-12 col-lg-4"><div class="card p-3 h-100 bg-primary text-white border-0 shadow-sm"><h6 class="fw-bold border-bottom pb-2">Census ชีทปัจจุบัน</h6><div id="censusContent">กำลังโหลด...</div></div></div>
@@ -60,14 +61,13 @@
       <form id="dataForm">
         <input type="hidden" id="rowId">
         <input type="hidden" id="patientStatusStored">
-        <div class="card shadow-sm border-0"><div class="section-title">1. การรับเข้า</div><div class="card-body row g-2">
+        <div class="card border-0 shadow-sm"><div class="section-title">1. การรับเข้า</div><div class="card-body row g-2">
             <div class="col-4 col-md-2"><label class="form-label">ลำดับ</label><input type="text" class="form-control bg-light" id="seq" readonly></div>
             <div class="col-8 col-md-3"><label class="form-label">ประเภท</label><select class="form-select" id="inType"><option value="รับใหม่">รับใหม่</option><option value="รับย้าย">รับย้าย</option><option value="รับ Refer">รับ Refer</option></select></div>
             <div class="col-6 col-md-3"><label class="form-label">วันที่รับ *</label><input type="date" class="form-control" id="inDate" required onchange="calculateLOS()"></div>
             <div class="col-6 col-md-2"><label class="form-label">เวลา *</label><input type="time" class="form-control" id="inTime" required></div>
             <div class="col-12 col-md-2"><label class="form-label">ต้นทาง</label><input type="text" class="form-control" id="inDept"></div>
         </div></div>
-        
         <div class="card shadow-sm border-0"><div class="section-title bg-info text-white">2. ข้อมูลผู้ป่วย</div><div class="card-body row g-2">
             <div class="col-12 col-md-6"><label class="form-label">ชื่อ-นามสกุล *</label><div class="input-group"><select id="prefix" class="form-select" style="max-width: 90px;"><option value="นาย">นาย</option><option value="นาง">นาง</option><option value="น.ส.">น.ส.</option><option value="ด.ช.">ด.ช.</option><option value="ด.ญ.">ด.ญ.</option></select><input type="text" class="form-control" id="patientName" required></div></div>
             <div class="col-6 col-md-3"><label class="form-label">เพศ *</label><select id="gender" class="form-select" required><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option></select></div>
@@ -81,7 +81,6 @@
             <div class="col-6 col-md-4"><label class="form-label">Dx. หลัง</label><input type="text" id="dx2" class="form-control" list="dxList"></div>
             <div class="col-12"><label class="form-label">ที่อยู่</label><input type="text" class="form-control" id="address"></div>
         </div></div>
-
         <div class="card shadow-sm border-warning border-0"><div class="section-title bg-warning text-dark">3. การจำหน่าย / Outcome</div><div class="card-body row g-2">
             <div class="col-6 col-md-3"><label class="form-label">D/C วันที่</label><input type="date" class="form-control" id="dcDate" onchange="calculateLOS()"></div>
             <div class="col-6 col-md-3"><label class="form-label">LOS (เดือนนี้)</label><input type="text" class="form-control text-center fw-bold" id="los" readonly></div>
@@ -123,12 +122,13 @@
   async function initSheets() { 
     const names = await callApi('getSheetNames'); 
     const selector = document.getElementById('sheetSelector');
-    if (names.length === 0) { selector.innerHTML = `<option value="">ยังไม่มีข้อมูล</option>`; currentSheet = ""; }
-    else { selector.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join(''); currentSheet = names[0]; loadDashboard(); }
+    const btn = document.querySelector('button[onclick="closeMonthUI()"]');
+    if (names.length === 0) { selector.innerHTML = `<option value="">ยังไม่มีข้อมูล</option>`; btn.innerText = "เริ่มเดือนแรก"; btn.classList.replace('btn-danger', 'btn-warning'); currentSheet = ""; }
+    else { selector.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join(''); btn.innerText = "ปิดยอดเดือน"; btn.classList.replace('btn-warning', 'btn-danger'); currentSheet = names[0]; loadDashboard(); }
   }
 
   function onSheetChange() { currentSheet = document.getElementById('sheetSelector').value; loadDashboard(); }
-  async function checkAN() { formatHNAN('an'); if (!document.getElementById('rowId').value) { const isDup = await callApi('checkDuplicateAN', { targetSheet: currentSheet, an: document.getElementById('an').value }); if (isDup) Swal.fire('AN ซ้ำ!', 'มีในชีทปัจจุบันแล้ว', 'warning'); } }
+  async function checkAN() { formatHNAN('an'); if (!document.getElementById('rowId').value) { const isDup = await callApi('checkDuplicateAN', { targetSheet: currentSheet, an: document.getElementById('an').value }); if (isDup) Swal.fire('AN ซ้ำ!', 'มีหมายเลข AN นี้ในระบบแล้ว', 'warning'); } }
 
   function getMonthStartFromSheet() {
     const months = ["มกรา", "กุมภา", "มีนา", "เมษา", "พฤษภา", "มิถุนา", "กรกฎา", "สิงหา", "กันยา", "ตุลา", "พฤศจิกา", "ธันวา"];
@@ -139,6 +139,19 @@
     return new Date(year, mIdx, 1);
   }
 
+  function getActiveLOS(inDateStr, pStatus) {
+    if (!inDateStr) return 0;
+    const p = inDateStr.split('/');
+    const dStartReal = new Date(parseInt(p[2])-543, parseInt(p[1])-1, parseInt(p[0]));
+    const mS = getMonthStartFromSheet();
+    let dStart = dStartReal;
+    if (pStatus === "ยอดยกมา" && mS && dStartReal < mS) dStart = mS;
+    let dEnd = new Date();
+    if (mS) { const lastDay = new Date(mS.getFullYear(), mS.getMonth() + 1, 0); if (dEnd > lastDay) dEnd = lastDay; }
+    const diff = Math.floor((dEnd - dStart) / (1000*60*60*24));
+    return (pStatus === "ยอดยกมา") ? diff : diff + 1;
+  }
+
   function calculateLOS() {
     if (document.getElementById('admitUnder6').value.trim() !== "") { document.getElementById('los').value = "0"; return; }
     const sVal = document.getElementById('inDate').value, eVal = document.getElementById('dcDate').value || document.getElementById('deathDate').value || document.getElementById('transferOutDate').value || document.getElementById('abscondDate').value || document.getElementById('refuseDate').value || document.getElementById('referOutDate').value;
@@ -146,13 +159,10 @@
       let start = new Date(sVal), end = new Date(eVal);
       const mS = getMonthStartFromSheet();
       const status = document.getElementById('patientStatusStored').value || "รับใหม่";
-      
-      // กฎ 7+4
       if (status === "ยอดยกมา" && mS && start < mS) {
-        start = mS; 
-        document.getElementById('los').value = Math.floor((end - start) / (1000*60*60*24)); // ลบตรงๆ (5-1=4)
+        start = mS; document.getElementById('los').value = Math.floor((end - start) / (1000*60*60*24));
       } else {
-        document.getElementById('los').value = Math.floor((end - start) / (1000*60*60*24)) + 1; // บวกวันแรก (5-1+1=5)
+        document.getElementById('los').value = Math.floor((end - start) / (1000*60*60*24)) + 1;
       }
     }
   }
@@ -165,10 +175,12 @@
       data.forEach(item => {
         const r = item.rawData; if (item.status === 'จำหน่ายแล้ว') dc++; else active++;
         sMap[r[17]] = (sMap[r[17]] || 0) + 1; saMap[r[16]] = (saMap[r[16]] || 0) + 1;
-        html += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[13]}</td><td>${r[11]}</td><td>${r[15]}</td><td>${item.displayLOS}</td><td><span class="badge ${item.status==='จำหน่ายแล้ว'?'bg-success':'bg-warning text-dark'}">${item.status}</span></td><td><div class="btn-group"><button class="btn btn-sm btn-outline-primary" onclick='editPatient(${JSON.stringify(item)})'>แก้</button><button class="btn btn-sm btn-outline-danger" onclick='printPDF(${JSON.stringify(item)})'>PDF</button></div></td></tr>`;
+        const los = item.status === 'ยังรักษาอยู่' ? getActiveLOS(item.inDate, item.patientStatus) : item.displayLOS;
+        const typeB = item.patientStatus === 'ยอดยกมา' ? 'bg-secondary' : 'bg-info text-dark';
+        html += `<tr><td><span class="badge ${typeB}">${item.patientStatus}</span></td><td>${r[1]}</td><td>${r[13]}</td><td>${r[11]}</td><td>${r[15]}</td><td class="${item.status==='ยังรักษาอยู่'&&los>=14?'long-stay':''}">${los}</td><td><span class="badge ${item.status==='จำหน่ายแล้ว'?'bg-success':'bg-warning text-dark'}">${item.status}</span></td><td><div class="btn-group"><button class="btn btn-sm btn-outline-primary" onclick='editPatient(${JSON.stringify(item)})'>แก้</button><button class="btn btn-sm btn-outline-danger" onclick='printPDF(${JSON.stringify(item)})'>PDF</button></div></td></tr>`;
       });
       document.getElementById('tableBody').innerHTML = html;
-      document.getElementById('censusContent').innerHTML = `<h3 class="m-0 text-white">${active}</h3>Admit | D/C: ${dc} | รวม: ${data.length}`;
+      document.getElementById('censusContent').innerHTML = `<h3 class="m-0 text-white">${active}</h3>ราย (Admit) | D/C: ${dc} | รวม: ${data.length}`;
       updateCharts(sMap, saMap);
       dataTable = $('#patientTable').DataTable({ order: [[1, 'desc']], responsive: true, language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/th.json' } });
       Swal.close();
@@ -177,27 +189,26 @@
 
   function updateCharts(sMap, saMap) {
     if (sithiChart) sithiChart.destroy(); if (saiChart) saiChart.destroy();
-    const cfg = (t, m, c) => ({ type: 'bar', data: { labels: Object.keys(m), datasets: [{ data: Object.values(m), backgroundColor: c, borderRadius: 5 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: t, align: 'start' }, legend: { display: false } }, scales: { x:{grid:{display:false}}, y:{grid:{display:false}} } } });
-    sithiChart = new Chart(document.getElementById('chartSithi'), cfg('สิทธิ', sMap, '#0d6efd'));
-    saiChart = new Chart(document.getElementById('chartSai'), cfg('สาย', saMap, '#198754'));
+    const config = (t, m, c) => ({ type: 'bar', data: { labels: Object.keys(m), datasets: [{ data: Object.values(m), backgroundColor: c, borderRadius: 5 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: t, align: 'start' }, legend: { display: false } }, scales: { x:{grid:{display:false}}, y:{grid:{display:false}} } } });
+    sithiChart = new Chart(document.getElementById('chartSithi'), config('สิทธิการรักษา', sMap, '#0d6efd'));
+    saiChart = new Chart(document.getElementById('chartSai'), config('สายการแพทย์', saMap, '#198754'));
   }
 
   function showFullReport() {
     Swal.fire({ title: 'คำนวณ...', didOpen: () => Swal.showLoading() });
     callApi('getMonthlyReportData', currentSheet).then(res => {
       document.getElementById('reportMonthTitle').innerText = currentSheet;
-      let s = { carry: {M:0,F:0}, newI: {M:0,F:0}, out: { dc:{M:0,F:0}, tra:{M:0,F:0}, abs:{M:0,F:0}, refu:{M:0,F:0}, refO:{M:0,F:0}, death:{M:0,F:0} }, los: { M:0, F:0, Mc:0, Fc:0 } };
+      let s = { carry: {M:0,F:0}, newI: {M:0,F:0}, out: { dc:{M:0,F:0}, tra:{M:0,F:0}, abs:{M:0,F:0}, refu:{M:0,F:0}, refO:{M:0,F:0}, death:{M:0,F:0} }, los: { M:0, F:0, Mc:0, Fc:0 }, dx: {} };
       res.current.forEach(item => {
-        const r = item.rawData; const gx = r[33] === 'หญิง' ? 'F' : 'M';
+        const r = item.rawData; const gx = r[33] === 'หญิง' ? 'F' : 'M'; const dx = r[19] || r[18];
         if (item.patientStatus === 'ยอดยกมา') s.carry[gx]++; else s.newI[gx]++;
         if(r[20]) s.out.dc[gx]++; if(r[24]) s.out.tra[gx]++; if(r[26]) s.out.abs[gx]++; if(r[27]) s.out.refu[gx]++; if(r[28]) s.out.refO[gx]++; if(r[30]) s.out.death[gx]++;
-        
-        // นับ LOS ทุกคน (Admit + DC)
-        s.los[gx] += parseInt(item.displayLOS) || 0; 
-        s.los[gx+'c']++; 
+        let currentLos = item.status === 'ยังรักษาอยู่' ? getActiveLOS(item.inDate, item.patientStatus) : parseInt(item.displayLOS);
+        s.los[gx] += currentLos || 0; s.los[gx+'c']++;
+        if(dx && !s.dx[dx]) s.dx[dx]={M:0,F:0}; if(dx) s.dx[dx][gx]++;
       });
       let tL = s.los.M + s.los.F;
-      let html = `<div class="row g-2"><div class="col-md-6"><h6>1. จำนวนผู้ป่วย</h6><table class="table table-sm border small"><tr><th>กลุ่ม</th><th>ชาย</th><th>หญิง</th><th>รวม</th></tr><tr><td>ยกมา</td><td>${s.carry.M}</td><td>${s.carry.F}</td><td>${s.carry.M+s.carry.F}</td></tr><tr><td>รับใหม่</td><td>${s.newI.M}</td><td>${s.newI.F}</td><td>${s.newI.M+s.newI.F}</td></tr><tr class="table-primary fw-bold"><td>รวมดูแล</td><td>${s.carry.M+s.newI.M}</td><td>${s.carry.F+s.newI.F}</td><td>${s.carry.M+s.newI.M+s.carry.F+s.newI.F}</td></tr></table></div><div class="col-md-6"><h6>2. การจำหน่าย ( Outcome )</h6><table class="table table-sm border small"><tr><th>เหตุ</th><th>ชาย</th><th>หญิง</th><th>รวม</th></tr><tr><td>D/C ปกติ</td><td>${s.out.dc.M}</td><td>${s.out.dc.F}</td><td>${s.out.dc.M+s.out.dc.F}</td></tr><tr><td>ย้าย/หนี/ตาย</td><td>${s.out.tra.M+s.out.abs.M+s.out.death.M}</td><td>...</td><td>...</td></tr></table></div><div class="col-12 mt-2 p-3 bg-white border rounded text-success text-center fw-bold">3. วันนอนรวมเดือนนี้: ${tL} วัน | AVG: ${(tL/(s.los.Mc+s.los.Fc||1)).toFixed(2)} วัน/ราย</div></div>`;
+      let html = `<div class="row g-2"><div class="col-md-6"><h6>1. จำนวนสะสม</h6><table class="table table-sm border small"><tr><th>กลุ่ม</th><th>ชาย</th><th>หญิง</th><th>รวม</th></tr><tr><td>ยกมา</td><td>${s.carry.M}</td><td>${s.carry.F}</td><td>${s.carry.M+s.carry.F}</td></tr><tr><td>รับใหม่</td><td>${s.newI.M}</td><td>${s.newI.F}</td><td>${s.newI.M+s.newI.F}</td></tr><tr class="table-primary fw-bold"><td>รวม</td><td>${s.carry.M+s.newI.M}</td><td>${s.carry.F+s.newI.F}</td><td>${s.carry.M+s.newI.M+s.carry.F+s.newI.F}</td></tr></table></div><div class="col-md-6"><h6>2. การจำหน่าย</h6><table class="table table-sm border small"><tr><th>เหตุ</th><th>ชาย</th><th>หญิง</th><th>รวม</th></tr><tr><td>D/C ปกติ</td><td>${s.out.dc.M}</td><td>${s.out.dc.F}</td><td>${s.out.dc.M+s.out.dc.F}</td></tr><tr><td>ย้าย/Refer/หนี</td><td>${s.out.tra.M+s.out.refO.M+s.out.abs.M+s.out.refu.M}</td><td>${s.out.tra.F+s.out.refO.F+s.out.abs.F+s.out.refu.F}</td><td>...</td></tr><tr class="table-danger"><td>เสียชีวิต</td><td>${s.out.death.M}</td><td>${s.out.death.F}</td><td>${s.out.death.M+s.out.death.F}</td></tr></table></div><div class="col-12 mt-2 p-3 bg-white border rounded text-success text-center fw-bold">3. วันนอนรวมเดือนนี้: ${tL} วัน | AVG LOS: ${(tL/(s.los.Mc+s.los.Fc||1)).toFixed(2)} วัน/ราย</div></div>`;
       document.getElementById('reportResult').innerHTML = html; Swal.close(); new bootstrap.Modal(document.getElementById('reportModal')).show();
     });
   }
@@ -252,7 +263,7 @@
       if(isConfirmed){ Swal.fire({title:'กำลังสร้าง...'}); await callApi('initFirstMonth'); initSheets(); }
       return;
     }
-    const res = await Swal.fire({ title: 'ปิดยอดเดือน?', text: 'สร้างเดือนถัดไปและยกยอดค้างให้อัตโนมัติ', icon: 'warning', showCancelButton: true });
+    const res = await Swal.fire({ title: 'ปิดยอดเดือน?', text: 'ระบบจะสร้างเดือนถัดไปและยกยอดค้างให้อัตโนมัติ', icon: 'warning', showCancelButton: true });
     if (res.isConfirmed) { Swal.fire({ title: 'กำลังดำเนินการ...' }); await callApi('closeMonthAction', { currentSheetName: currentSheet }); initSheets(); }
   }
   
