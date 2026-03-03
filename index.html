@@ -141,37 +141,48 @@
     return new Date(year, mIdx, 1);
   }
 
-  function getActiveLOS(inDateStr, pStatus) {
+ // 1. คำนวณวันนอนของคนที่ยังรักษาอยู่ (ให้ถึงสิ้นเดือนของชีทนั้น)
+  function getActiveLOS(inDateStr) {
     if (!inDateStr) return 0;
-    const p = inDateStr.split('/');
-    const dStartReal = new Date(parseInt(p[2])-543, parseInt(p[1])-1, parseInt(p[0]));
-    const mS = getMonthStartFromSheet();
-    let dStart = dStartReal;
-    if (pStatus === "ยอดยกมา" && mS && dStartReal < mS) dStart = mS;
-    
-    let dEnd = new Date();
-    if (mS) {
-        const lastDay = new Date(mS.getFullYear(), mS.getMonth() + 1, 0);
-        if (dEnd > lastDay) dEnd = lastDay;
-    }
-    const diff = Math.floor((dEnd - dStart) / (1000*60*60*24));
-    return (pStatus === "ยอดยกมา") ? diff : diff + 1;
+    try {
+      const p = inDateStr.split('/');
+      const dIn = new Date(parseInt(p[2])-543, parseInt(p[1])-1, parseInt(p[0]));
+      
+      const mS = getMonthStartFromSheet();
+      let dEnd = new Date(); // วันนี้
+      
+      // ถ้าเปิดดูชีทเดือนในอดีต (ที่สิ้นเดือนไปแล้ว) ให้หยุดนับที่วันสุดท้ายของเดือนนั้น
+      if (mS) {
+        const lastDayOfMonth = new Date(mS.getFullYear(), mS.getMonth() + 1, 0);
+        if (dEnd > lastDayOfMonth) {
+            dEnd = lastDayOfMonth;
+        }
+      }
+      
+      const diff = Math.floor((dEnd - dIn) / (1000 * 60 * 60 * 24)) + 1; // +1 เพื่อนับรวมวันแรก
+      return diff >= 0 ? diff : 0;
+    } catch(e) { return 0; }
   }
 
+  // 2. คำนวณวันนอนตอนกรอกแบบฟอร์ม
   function calculateLOS() {
-    if (document.getElementById('admitUnder6').value.trim() !== "") { document.getElementById('los').value = "0"; return; }
-    const sVal = document.getElementById('inDate').value, eVal = document.getElementById('dcDate').value || document.getElementById('deathDate').value || document.getElementById('transferOutDate').value || document.getElementById('abscondDate').value || document.getElementById('refuseDate').value || document.getElementById('referOutDate').value;
+    if (document.getElementById('admitUnder6').value.trim() !== "") { 
+        document.getElementById('los').value = "0"; return; 
+    }
+    
+    const sVal = document.getElementById('inDate').value;
+    const eVal = document.getElementById('dcDate').value || document.getElementById('deathDate').value || document.getElementById('transferOutDate').value || document.getElementById('abscondDate').value || document.getElementById('refuseDate').value || document.getElementById('referOutDate').value;
+    
     if (sVal && eVal) {
-      let start = new Date(sVal), end = new Date(eVal);
-      const mS = getMonthStartFromSheet();
-      const status = document.getElementById('patientStatusStored').value || "รับใหม่";
-      if (status === "ยอดยกมา" && mS && start < mS) {
-        start = mS; document.getElementById('los').value = Math.floor((end - start) / (1000*60*60*24));
-      } else {
-        document.getElementById('los').value = Math.floor((end - start) / (1000*60*60*24)) + 1;
-      }
+      let start = new Date(sVal);
+      let end = new Date(eVal);
+      
+      // เอา (วันออก - วันรับ) แบบตรงไปตรงมา ไม่สนว่าเป็นยอดยกมาหรือไม่
+      let diff = Math.floor((end - start) / (1000*60*60*24));
+      document.getElementById('los').value = diff >= 0 ? diff : 0;
     }
   }
+
 
   function loadDashboard() {
     Swal.fire({ title: 'โหลด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
