@@ -657,32 +657,94 @@ function exportCSV(type){
     }, 1000);
   });
 
-  async function initSheets() {
-    const names = await callApi('getSheetNames');
-    const selector = document.getElementById('sheetSelector');
-    const btn = document.querySelector('button[onclick="closeMonthUI()"]');
+  function sheetNameToDate(sheetName) {
+  if (!sheetName) return null;
 
-    if (!names || names.length === 0) {
-      selector.innerHTML = `<option value="">ยังไม่มีข้อมูล</option>`;
-      btn.innerText = "เริ่มเดือนแรก";
-      btn.classList.remove('btn-danger');
-      btn.classList.add('btn-warning');
-      currentSheet = "";
-      lastData = [];
-      updateSummary([]);
-      document.getElementById('censusContent').innerHTML = "ยังไม่มีข้อมูล";
-      return;
-    }
+  // รองรับทั้ง "มกรา/กุมภา/มีนา..." และ "มกราคม/กุมภาพันธ์/มีนาคม..."
+  const monthMap = {
+    "มกรา":0, "มกราคม":0,
+    "กุมภา":1, "กุมภาพันธ์":1,
+    "มีนา":2, "มีนาคม":2,
+    "เมษา":3, "เมษายน":3,
+    "พฤษภา":4, "พฤษภาคม":4,
+    "มิถุนา":5, "มิถุนายน":5,
+    "กรกฎา":6, "กรกฎาคม":6,
+    "สิงหา":7, "สิงหาคม":7,
+    "กันยา":8, "กันยายน":8,
+    "ตุลา":9, "ตุลาคม":9,
+    "พฤศจิกา":10, "พฤศจิกายน":10,
+    "ธันวา":11, "ธันวาคม":11
+  };
 
-    selector.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join('');
-    btn.innerText = "ปิดยอดเดือน";
-    btn.classList.remove('btn-warning');
-    btn.classList.add('btn-danger');
+  // หาเดือนจากชื่อ
+  let mIdx = null;
+  for (const k of Object.keys(monthMap)) {
+    if (sheetName.includes(k)) { mIdx = monthMap[k]; break; }
+  }
+  if (mIdx === null) return null;
 
-    currentSheet = names[0];
-    loadDashboard();
+  // หาเลขปีจากชื่อชีท (รองรับ 2567, 67, 2024)
+  const nums = sheetName.match(/\d+/g);
+  if (!nums || nums.length === 0) return null;
+  let y = parseInt(nums[nums.length - 1], 10);
+
+  // normalize year
+  // - ถ้าเป็น พ.ศ. (>=2400) -> แปลงเป็น ค.ศ.
+  // - ถ้าเป็น 2 หลัก -> สมมติเป็น พ.ศ. 25xx แล้วค่อยแปลง
+  if (y >= 2400) y -= 543;
+  else if (y < 100) y = (2500 + y) - 543;
+
+  const d = new Date(y, mIdx, 1);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function pickLatestSheet(names) {
+  if (!Array.isArray(names) || names.length === 0) return "";
+  const sorted = [...names].sort((a, b) => {
+    const da = sheetNameToDate(a);
+    const db = sheetNameToDate(b);
+
+    // ถ้า parse ไม่ได้ ให้ดันไปท้าย ๆ
+    if (!da && !db) return String(a).localeCompare(String(b));
+    if (!da) return 1;
+    if (!db) return -1;
+
+    return db - da; // ใหม่สุดก่อน
+  });
+  return sorted[0];
+}
+
+async function initSheets() {
+  const names = await callApi('getSheetNames');
+  const selector = document.getElementById('sheetSelector');
+  const btn = document.querySelector('button[onclick="closeMonthUI()"]');
+
+  if (!names || names.length === 0) {
+    selector.innerHTML = `<option value="">ยังไม่มีข้อมูล</option>`;
+    btn.innerText = "เริ่มเดือนแรก";
+    btn.classList.remove('btn-danger');
+    btn.classList.add('btn-warning');
+    currentSheet = "";
+    lastData = [];
+    updateSummary([]);
+    document.getElementById('censusContent').innerHTML = "ยังไม่มีข้อมูล";
+    return;
   }
 
+  // แสดงชื่อทั้งหมดใน selector (จะคงตามที่ API คืนมา หรือจะ sort ก่อนก็ได้)
+  selector.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join('');
+
+  btn.innerText = "ปิดยอดเดือน";
+  btn.classList.remove('btn-warning');
+  btn.classList.add('btn-danger');
+
+  // ✅ เลือกชีทล่าสุด
+  currentSheet = pickLatestSheet(names);
+  selector.value = currentSheet;
+
+  loadDashboard();
+}
   function onSheetChange() {
     currentSheet = document.getElementById('sheetSelector').value;
     loadDashboard();
