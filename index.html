@@ -200,23 +200,94 @@
     saiChart = new Chart(document.getElementById('chartSai'), cfg('สายการแพทย์', saMap, '#198754'));
   }
 
-  function showFullReport() {
-    Swal.fire({ title: 'สรุปผลรวม...', didOpen: () => Swal.showLoading() });
+function showFullReport() {
+    Swal.fire({ title: 'คำนวณ...', didOpen: () => Swal.showLoading() });
     callApi('getAllData', currentSheet).then(data => {
       document.getElementById('reportMonthTitle').innerText = currentSheet;
-      let s = { carry: {M:0,F:0}, newI: {M:0,F:0}, out: { dc:{M:0,F:0}, tra:{M:0,F:0}, abs:{M:0,F:0}, refu:{M:0,F:0}, refO:{M:0,F:0}, death:{M:0,F:0} }, los: { M:0, F:0, Mc:0, Fc:0 } };
+      let mStart = getMonthStartFromSheet();
+      let s = { 
+        carry: {M:0,F:0}, 
+        newI: {M:0,F:0}, 
+        out: { dc:{M:0,F:0}, tra:{M:0,F:0}, abs:{M:0,F:0}, refu:{M:0,F:0}, refO:{M:0,F:0}, death:{M:0,F:0} }, 
+        los: { M:0, F:0, Mc:0, Fc:0 }, 
+        dx: {} 
+      };
+
       data.forEach(item => {
-        const r = item.rawData; const gx = r[33] === 'หญิง' ? 'F' : 'M';
-        if (item.patientStatus === 'ยอดยกมา') s.carry[gx]++; else s.newI[gx]++;
-        if(r[20]) s.out.dc[gx]++; if(r[24]) s.out.tra[gx]++; if(r[26]) s.out.abs[gx]++; if(r[27]) s.out.refu[gx]++; if(r[28]) s.out.refO[gx]++; if(r[30]) s.out.death[gx]++;
-        if(item.status === 'จำหน่ายแล้ว'){ s.los[gx] += parseInt(item.displayLOS); s.los[gx+'c']++; }
+        const r = item.rawData; 
+        const g = r[33] === 'หญิง' ? 'F' : 'M'; 
+        const dx = r[19] || r[18];
+        const inD = new Date(r[2] || r[5] || r[8]);
+
+        // นับยอดผู้ป่วย (ยกมา / รับใหม่)
+        if (item.patientStatus === 'ยอดยกมา' || (mStart && inD < mStart)) {
+            s.carry[g]++;
+        } else {
+            s.newI[g]++;
+        }
+
+        // นับยอดจำหน่าย
+        if(r[20]) s.out.dc[g]++; 
+        if(r[24]) s.out.tra[g]++; 
+        if(r[26]) s.out.abs[g]++; 
+        if(r[27]) s.out.refu[g]++; 
+        if(r[28]) s.out.refO[g]++; 
+        if(r[30]) s.out.death[g]++;
+
+        // --- แก้ไขตรงนี้: นับ LOS ของ *ทุกคน* (ทั้งคนออกแล้วและยังไม่ออก) ---
+        // เราจะเอาค่า displayLOS ที่คำนวณมาอย่างดีจาก Backend หรือฟังก์ชันมาใช้เลย
+        let currentLos = item.status === 'ยังรักษาอยู่' ? getActiveLOS(item.inDate, item.patientStatus) : (parseInt(item.displayLOS) || 0);
+        
+        s.los[g] += currentLos;
+        s.los[g+'c']++; // นับหัวคนไข้เพื่อหาค่าเฉลี่ย
+
+        // เก็บสถิติโรค
+        if(dx && !s.dx[dx]) s.dx[dx] = {M:0, F:0}; 
+        if(dx) s.dx[dx][g]++;
       });
-      let tL = s.los.M + s.los.F;
-      let html = `<div class="row g-2"><div class="col-md-6"><h6>1. จำนวนผู้ป่วยสะสม</h6><table class="table table-sm border small"><tr><th>กลุ่ม</th><th>ชาย</th><th>หญิง</th><th>รวม</th></tr><tr><td>ยกมา</td><td>${s.carry.M}</td><td>${s.carry.F}</td><td>${s.carry.M+s.carry.F}</td></tr><tr><td>รับใหม่</td><td>${s.newI.M}</td><td>${s.newI.F}</td><td>${s.newI.M+s.newI.F}</td></tr><tr class="table-primary fw-bold"><td>รวม</td><td>${s.carry.M+s.newI.M}</td><td>${s.carry.F+s.newI.F}</td><td>${s.carry.M+s.newI.M+s.carry.F+s.newI.F}</td></tr></table></div><div class="col-md-6"><h6>2. การจำหน่าย ( Outcome )</h6><table class="table table-sm border small"><tr><th>เหตุ</th><th>ชาย</th><th>หญิง</th><th>รวม</th></tr><tr><td>D/C ปกติ</td><td>${s.out.dc.M}</td><td>${s.out.dc.F}</td><td>${s.out.dc.M+s.out.dc.F}</td></tr><tr><td>ย้าย/Refer/หนี</td><td>${s.out.tra.M+s.out.refO.M+s.out.abs.M+s.out.refu.M}</td><td>...</td><td>...</td></tr><tr class="table-danger"><td>เสียชีวิต</td><td>${s.out.death.M}</td><td>${s.out.death.F}</td><td>${s.out.death.M+s.out.death.F}</td></tr></table></div><div class="col-12 mt-2 p-3 bg-white border rounded text-success text-center fw-bold small">3. วันนอนรวมในเดือนนี้: ${tL} วัน | AVG: ${(tL/(s.los.Mc+s.los.Fc||1)).toFixed(2)} วัน/ราย</div></div>`;
-      document.getElementById('reportResult').innerHTML = html; Swal.close(); new bootstrap.Modal(document.getElementById('reportModal')).show();
+
+      let tL = s.los.M + s.los.F; // วันนอนรวมทั้งหมด
+      let tP = s.los.Mc + s.los.Fc; // จำนวนคนไข้ทั้งหมดในเดือนนี้
+
+      let html = `
+        <div class="row g-2">
+          <div class="col-md-6">
+            <h6 class="fw-bold text-primary">1. จำนวนผู้ป่วย (Admission)</h6>
+            <table class="table table-sm border small table-stats">
+              <tr><th>กลุ่ม</th><th>ชาย</th><th>หญิง</th><th>รวม</th></tr>
+              <tr><td>ยกมา</td><td>${s.carry.M}</td><td>${s.carry.F}</td><td>${s.carry.M+s.carry.F}</td></tr>
+              <tr><td>รับใหม่</td><td>${s.newI.M}</td><td>${s.newI.F}</td><td>${s.newI.M+s.newI.F}</td></tr>
+              <tr class="table-primary fw-bold"><td>รวมดูแล</td><td>${s.carry.M+s.newI.M}</td><td>${s.carry.F+s.newI.F}</td><td>${s.carry.M+s.newI.M+s.carry.F+s.newI.F}</td></tr>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <h6 class="fw-bold text-danger">2. การจำหน่าย (Outcome)</h6>
+            <table class="table table-sm border small table-stats">
+              <tr><th>เหตุ</th><th>ชาย</th><th>หญิง</th><th>รวม</th></tr>
+              <tr><td>D/C ปกติ</td><td>${s.out.dc.M}</td><td>${s.out.dc.F}</td><td>${s.out.dc.M+s.out.dc.F}</td></tr>
+              <tr><td>ย้าย/Refer/หนี</td><td>${s.out.tra.M+s.out.refO.M+s.out.abs.M+s.out.refu.M}</td><td>${s.out.tra.F+s.out.refO.F+s.out.abs.F+s.out.refu.F}</td><td>...</td></tr>
+              <tr class="table-danger"><td>เสียชีวิต</td><td>${s.out.death.M}</td><td>${s.out.death.F}</td><td>${s.out.death.M+s.out.death.F}</td></tr>
+            </table>
+          </div>
+          <div class="col-12 mt-2">
+            <div class="p-3 bg-white border rounded text-center text-success fw-bold">
+              3. วันนอนรวมในเดือนนี้ (Patient Days): ${tL} วัน | AVG LOS: ${(tL/(tP||1)).toFixed(2)} วัน/ราย
+            </div>
+          </div>
+          <div class="col-12 mt-2">
+            <h6 class="fw-bold small border-bottom pb-1">4. Dx Top 5 (การวินิจฉัยโรค)</h6>
+            <table class="table table-sm table-striped border small text-center">
+              <tr class="table-dark"><th>Dx</th><th>ชาย</th><th>หญิง</th><th>รวม</th></tr>
+              ${Object.entries(s.dx).sort((a,b)=>(b[1].M+b[1].F)-(a[1].M+a[1].F)).slice(0,5).map(([k,v])=>`<tr><td class="text-start ps-2">${k}</td><td>${v.M}</td><td>${v.F}</td><td>${v.M+v.F}</td></tr>`).join('')}
+            </table>
+          </div>
+        </div>`;
+      
+      document.getElementById('reportResult').innerHTML = html; 
+      Swal.close(); 
+      new bootstrap.Modal(document.getElementById('reportModal')).show();
     });
   }
-
   function editPatient(item) {
     const r = item.rawData; document.getElementById('rowId').value = item.rowId; document.getElementById('seq').value = r[1];
     document.getElementById('patientStatusStored').value = r[0];
