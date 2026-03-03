@@ -431,18 +431,9 @@
   }
 
   // Preview LOS (เพื่อ UX ในฟอร์มเท่านั้น) — LOS จริงในตารางใช้จาก backend
-  function getMonthStartFromSheet() {
-    const months = ["มกรา","กุมภา","มีนา","เมษา","พฤษภา","มิถุนา","กรกฎา","สิงหา","กันยา","ตุลา","พฤศจิกา","ธันวา"];
-    let mIdx = -1;
-    months.forEach((m, i) => { if (currentSheet.includes(m)) mIdx = i; });
-    if (mIdx === -1) return null;
-
-    const yearMatch = currentSheet.match(/\d+/);
-    let year = yearMatch ? (parseInt(yearMatch[0],10) < 100 ? 2000 + parseInt(yearMatch[0],10) - 43 : parseInt(yearMatch[0],10) - 543) : (new Date().getFullYear());
-    const d = new Date(year, mIdx, 1);
-    d.setHours(0,0,0,0);
-    return d;
-  }
+function getMonthStartFromSheet() {
+  return sheetNameToDate(currentSheet);
+}
 
   function calculateLOSPreview() {
     const admitUnder6 = document.getElementById('admitUnder6').value.trim();
@@ -657,49 +648,51 @@ function exportCSV(type){
     }, 1000);
   });
 
-  function sheetNameToDate(sheetName) {
+function sheetNameToDate(sheetName) {
   if (!sheetName) return null;
 
-  // รองรับทั้ง "มกรา/กุมภา/มีนา..." และ "มกราคม/กุมภาพันธ์/มีนาคม..."
   const monthMap = {
-    "มกรา":0, "มกราคม":0,
-    "กุมภา":1, "กุมภาพันธ์":1,
-    "มีนา":2, "มีนาคม":2,
-    "เมษา":3, "เมษายน":3,
-    "พฤษภา":4, "พฤษภาคม":4,
-    "มิถุนา":5, "มิถุนายน":5,
-    "กรกฎา":6, "กรกฎาคม":6,
-    "สิงหา":7, "สิงหาคม":7,
-    "กันยา":8, "กันยายน":8,
-    "ตุลา":9, "ตุลาคม":9,
-    "พฤศจิกา":10, "พฤศจิกายน":10,
-    "ธันวา":11, "ธันวาคม":11
+    "มกราคม":0,
+    "กุมภาพันธ์":1,
+    "มีนาคม":2,
+    "เมษายน":3,
+    "พฤษภาคม":4,
+    "มิถุนายน":5,
+    "กรกฎาคม":6,
+    "สิงหาคม":7,
+    "กันยายน":8,
+    "ตุลาคม":9,
+    "พฤศจิกายน":10,
+    "ธันวาคม":11
   };
 
-  // หาเดือนจากชื่อ
   let mIdx = null;
-  for (const k of Object.keys(monthMap)) {
-    if (sheetName.includes(k)) { mIdx = monthMap[k]; break; }
+  for (const m in monthMap) {
+    if (sheetName.includes(m)) {
+      mIdx = monthMap[m];
+      break;
+    }
   }
   if (mIdx === null) return null;
 
-  // หาเลขปีจากชื่อชีท (รองรับ 2567, 67, 2024)
-  const nums = sheetName.match(/\d+/g);
-  if (!nums || nums.length === 0) return null;
-  let y = parseInt(nums[nums.length - 1], 10);
+  // ดึงเลขปี (69 → 2569 → 2026)
+  const yearMatch = sheetName.match(/\d+/);
+  if (!yearMatch) return null;
 
-  // normalize year
-  // - ถ้าเป็น พ.ศ. (>=2400) -> แปลงเป็น ค.ศ.
-  // - ถ้าเป็น 2 หลัก -> สมมติเป็น พ.ศ. 25xx แล้วค่อยแปลง
-  if (y >= 2400) y -= 543;
-  else if (y < 100) y = (2500 + y) - 543;
+  let yearBE = parseInt(yearMatch[0], 10);
+  if (yearBE < 100) yearBE = 2500 + yearBE;
 
-  const d = new Date(y, mIdx, 1);
+  const yearCE = yearBE - 543;
+
+  const d = new Date(yearCE, mIdx, 1);
   d.setHours(0,0,0,0);
+
   return d;
 }
 
-function pickLatestSheet(names) {
+ 
+  
+  function pickLatestSheet(names) {
   if (!Array.isArray(names) || names.length === 0) return "";
   const sorted = [...names].sort((a, b) => {
     const da = sheetNameToDate(a);
