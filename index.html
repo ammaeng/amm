@@ -499,70 +499,77 @@
   }
 
   // ================== Summary / Render ==================
-  function updateSummary(all){
-const isCarry = (x.patientStatus || x.rawData?.[0]) === "ยอดยกมา";
-const carry = lastData.filter(x => isCarry);
-
-const newThisMonth = lastData.filter(x => {
-  const st = (x.patientStatus || x.rawData?.[0]) || "";
+function isCarryRow(x){
+  const st = (x.patientStatus || x.rawData?.[0] || "").trim();
+  return st === "ยอดยกมา";
+}
+function isNewThisMonthRow(x){
+  const st = (x.patientStatus || x.rawData?.[0] || "").trim();
   return st === "รับใหม่" || st === "รับย้าย" || st === "รับ Refer";
-});
-    const active = all.filter(x => x.status === 'ยังรักษาอยู่').length;
-    const dc = all.filter(x => x.status === 'จำหน่ายแล้ว').length;
+}
 
-    document.getElementById('sumCarry').innerText = carry;
-    document.getElementById('sumNew').innerText = nnew;
-    document.getElementById('sumTotal').innerText = all.length;
+function updateSummary(all){
+  const carryCount = all.filter(isCarryRow).length;
+  const newCount   = all.filter(isNewThisMonthRow).length;
 
-    document.getElementById('sumActive').innerText = active;
-    document.getElementById('sumDC').innerText = dc;
-    document.getElementById('sumRows').innerText = all.length;
-  }
+  const active = all.filter(x => x.status === 'ยังรักษาอยู่').length;
+  const dc = all.filter(x => x.status === 'จำหน่ายแล้ว').length;
 
-  function buildRowHtml(item){
-    const r = item.rawData;
-    const type = item.patientStatus || r[0] || '';
-    const typeBadge =
-    const badgeMap = {
-  "ยอดยกมา": "bg-secondary",
-  "รับใหม่": "bg-primary",
-  "รับย้าย": "bg-purple",      // คุณต้องเพิ่ม class เอง หรือใช้ bg-dark แทน
-  "รับ Refer": "bg-info text-dark"
-};
-const typeBadge = badgeMap[type] || "bg-light text-dark";
+  document.getElementById('sumCarry').innerText = carryCount;
+  document.getElementById('sumNew').innerText = newCount;
+  document.getElementById('sumTotal').innerText = all.length;
 
-    const statusBadge = item.status === 'จำหน่ายแล้ว' ? 'bg-success' : 'bg-warning text-dark';
-    const losVal = parseInt(item.displayLOS, 10);
-    const losCell = (!isNaN(losVal) && losVal >= 30) ? `<span class="long-stay">${item.displayLOS}</span>` : `${item.displayLOS ?? ''}`;
+  document.getElementById('sumActive').innerText = active;
+  document.getElementById('sumDC').innerText = dc;
+  document.getElementById('sumRows').innerText = all.length;
+}
 
-    return `
-      <tr>
-        <td><span class="badge ${typeBadge}">${type}</span></td>
-        <td>${r[1] || ''}</td>
-        <td>${r[13] || ''}</td>
-        <td>${r[11] || ''}</td>
-        <td>${r[15] || ''}</td>
-        <td>${losCell}</td>
-        <td><span class="badge ${statusBadge}">${item.status}</span></td>
-        <td>
-          <div class="btn-group">
-            <button class="btn btn-sm btn-outline-primary" onclick='editPatient(${JSON.stringify(item)})'>แก้</button>
-            <button class="btn btn-sm btn-outline-danger" onclick='printPDF(${JSON.stringify(item)})'>PDF</button>
-          </div>
-        </td>
-      </tr>
-    `;
-  }
+function buildRowHtml(item){
+  const r = item.rawData || [];
+  const type = (item.patientStatus || r[0] || '').trim();
 
-  function renderTables(){
-    const carry = lastData.filter(x => (x.patientStatus || x.rawData?.[0]) === 'ยอดยกมา');
-    const nnew  = lastData.filter(x => (x.patientStatus || x.rawData?.[0]) === 'รับใหม่');
+  const badgeMap = {
+    "ยอดยกมา": "bg-secondary",
+    "รับใหม่": "bg-primary",
+    "รับย้าย": "bg-dark",
+    "รับ Refer": "bg-info text-dark"
+  };
+  const typeBadge = badgeMap[type] || "bg-light text-dark";
 
-    document.getElementById('carryCount').innerText = carry.length;
-    document.getElementById('newCount').innerText = nnew.length;
+  const statusBadge = item.status === 'จำหน่ายแล้ว' ? 'bg-success' : 'bg-warning text-dark';
 
-    if (carryDT) carryDT.destroy();
-    if (newDT) newDT.destroy();
+  const losVal = parseInt(item.displayLOS, 10);
+  const losCell = (!isNaN(losVal) && losVal >= 30)
+    ? `<span class="long-stay">${item.displayLOS}</span>`
+    : `${item.displayLOS ?? ''}`;
+
+  return `
+    <tr>
+      <td><span class="badge ${typeBadge}">${type}</span></td>
+      <td>${r[1] || ''}</td>
+      <td>${r[13] || ''}</td>
+      <td>${r[11] || ''}</td>
+      <td>${r[15] || ''}</td>
+      <td>${losCell}</td>
+      <td><span class="badge ${statusBadge}">${item.status}</span></td>
+      <td>
+        <div class="btn-group">
+          <button class="btn btn-sm btn-outline-primary" onclick='editPatient(${JSON.stringify(item)})'>แก้</button>
+          <button class="btn btn-sm btn-outline-danger" onclick='printPDF(${JSON.stringify(item)})'>PDF</button>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+function renderTables(){
+  const carry = lastData.filter(isCarryRow);
+  const nnew  = lastData.filter(isNewThisMonthRow);
+
+  document.getElementById('carryCount').innerText = carry.length;
+  document.getElementById('newCount').innerText = nnew.length;
+
+  if (carryDT) carryDT.destroy();
+  if (newDT) newDT.destroy();
 
     document.getElementById('carryBody').innerHTML = carry.map(buildRowHtml).join('');
     document.getElementById('newBody').innerHTML   = nnew.map(buildRowHtml).join('');
@@ -608,11 +615,10 @@ const typeBadge = badgeMap[type] || "bg-light text-dark";
   function exportCSV(type){
     let filtered = lastData;
 
-    if(type === 'CARRY'){
-      filtered = lastData.filter(x => (x.patientStatus || x.rawData?.[0]) === 'ยอดยกมา');
-    } else if(type === 'NEW'){
-      filtered = lastData.filter(x => (x.patientStatus || x.rawData?.[0]) === 'รับใหม่');
-    }
+  filtered = lastData.filter(isCarryRow);
+} else if(type === 'NEW'){
+  filtered = lastData.filter(isNewThisMonthRow);
+}
 
     const headers = ['ประเภท','ลำดับ','HN','ชื่อ-สกุล','แผนก','LOS','สถานะ'];
     const rows = filtered.map(x => {
@@ -851,47 +857,68 @@ const typeBadge = badgeMap[type] || "bg-light text-dark";
   }
 
   // ================== Form submit ==================
-  document.getElementById('dataForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    Swal.fire({ title: 'บันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+document.getElementById('dataForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  Swal.fire({ title: 'บันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-    const formData = {
-      rowId: document.getElementById('rowId').value,
-      seq: document.getElementById('seq').value,
-      const inT = document.getElementById('inType').value; // รับใหม่/รับย้าย/รับ Refer
+  const inT = document.getElementById('inType').value; // รับใหม่/รับย้าย/รับ Refer
+  const existingStatus = (document.getElementById('patientStatusStored').value || "").trim();
+  const statusToSave = (existingStatus === "ยอดยกมา") ? "ยอดยกมา" : inT;
 
-// ถ้าเป็นการแก้ไขแถวเดิม และแถวนั้นเป็นยอดยกมา ให้คงยอดยกมาไว้
-      const existingStatus = document.getElementById('patientStatusStored').value || "";
-      const statusToSave = (existingStatus === "ยอดยกมา") ? "ยอดยกมา" : inT;
-      prefix: document.getElementById('prefix').value,
-      patientName: document.getElementById('patientName').value,
-      gender: document.getElementById('gender').value,
-      age: `${document.getElementById('ageYear').value} ปี ${document.getElementById('ageMonth').value} เดือน ${document.getElementById('ageDay').value} วัน`,
+  const formData = {
+    rowId: document.getElementById('rowId').value,
+    seq: document.getElementById('seq').value,
+    patientStatus: statusToSave,
 
-      hn: document.getElementById('hn').value,
-      an: document.getElementById('an').value,
-      ward: document.getElementById('ward').value,
-      sai: document.getElementById('sai').value,
-      sithi: document.getElementById('sithi').value,
-      dx1: document.getElementById('dx1').value,
-      dx2: document.getElementById('dx2').value,
-      address: document.getElementById('address').value,
+    prefix: document.getElementById('prefix').value,
+    patientName: document.getElementById('patientName').value,
+    gender: document.getElementById('gender').value,
+    age: `${document.getElementById('ageYear').value} ปี ${document.getElementById('ageMonth').value} เดือน ${document.getElementById('ageDay').value} วัน`,
 
-      los: document.getElementById('los').value,
-        fu: document.getElementById('fu').value,
+    hn: document.getElementById('hn').value,
+    an: document.getElementById('an').value,
+    ward: document.getElementById('ward').value,
+    sai: document.getElementById('sai').value,
+    sithi: document.getElementById('sithi').value,
+    dx1: document.getElementById('dx1').value,
+    dx2: document.getElementById('dx2').value,
+    address: document.getElementById('address').value,
 
-      admitUnder6: document.getElementById('admitUnder6').value,
+    los: document.getElementById('los').value,
+    fu: document.getElementById('fu').value,
+    admitUnder6: document.getElementById('admitUnder6').value,
 
-      dcDate: formatDateForSheet(document.getElementById('dcDate').value),
-      deathDate: formatDateForSheet(document.getElementById('deathDate').value),
-      transferOutDate: formatDateForSheet(document.getElementById('transferOutDate').value),
-      transferOut: document.getElementById('transferOut').value,
-      abscondDate: formatDateForSheet(document.getElementById('abscondDate').value),
-      refuseDate: formatDateForSheet(document.getElementById('refuseDate').value),
-      referOutDate: formatDateForSheet(document.getElementById('referOutDate').value),
-      referDestination: document.getElementById('referDestination').value
-    };
+    dcDate: formatDateForSheet(document.getElementById('dcDate').value),
+    deathDate: formatDateForSheet(document.getElementById('deathDate').value),
+    transferOutDate: formatDateForSheet(document.getElementById('transferOutDate').value),
+    transferOut: document.getElementById('transferOut').value,
+    abscondDate: formatDateForSheet(document.getElementById('abscondDate').value),
+    refuseDate: formatDateForSheet(document.getElementById('refuseDate').value),
+    referOutDate: formatDateForSheet(document.getElementById('referOutDate').value),
+    referDestination: document.getElementById('referDestination').value
+  };
 
+  const iD = formatDateForSheet(document.getElementById('inDate').value);
+  const iT = document.getElementById('inTime').value;
+  const iDep = document.getElementById('inDept').value;
+
+  if(inT === "รับใหม่"){
+    formData.newMark=iD; formData.newTime=iT; formData.newDept=iDep;
+  } else if(inT === "รับย้าย"){
+    formData.transferMark=iD; formData.transferTime=iT; formData.transferDept=iDep;
+  } else {
+    formData.referMark=iD; formData.referTime=iT; formData.referDept=iDep;
+  }
+
+  try{
+    await callApi('processData', { targetSheet: currentSheet, formData });
+    Swal.fire('สำเร็จ', '', 'success');
+    loadDashboard();
+    new bootstrap.Tab(document.querySelector('button[data-bs-target="#list-pane"]')).show();
+  }catch(err){
+    Swal.fire('ผิดพลาด', err.toString(), 'error');
+  }
+});
     const iD = formatDateForSheet(document.getElementById('inDate').value);
     const iT = document.getElementById('inTime').value;
     const inT = document.getElementById('inType').value;
@@ -918,8 +945,7 @@ const typeBadge = badgeMap[type] || "bg-light text-dark";
   function prepareNewForm(){
     document.getElementById('dataForm').reset();
     document.getElementById('rowId').value = "";
-    document.getElementById('patientStatusStored').value = "รับใหม่";
-
+document.getElementById('patientStatusStored').value = "รับใหม่";
     callApi('getNextSeq', currentSheet).then(s => {
       document.getElementById('seq').value = s;
     }).catch(()=>{ document.getElementById('seq').value=""; });
