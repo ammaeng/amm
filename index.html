@@ -612,36 +612,36 @@ function renderTables(){
   }
 
   // ================== Export ==================
-  function exportCSV(type){
-    let filtered = lastData;
+function exportCSV(type){
+  let filtered = lastData;
 
-  filtered = lastData.filter(isCarryRow);
-} else if(type === 'NEW'){
-  filtered = lastData.filter(isNewThisMonthRow);
-}
-
-    const headers = ['ประเภท','ลำดับ','HN','ชื่อ-สกุล','แผนก','LOS','สถานะ'];
-    const rows = filtered.map(x => {
-      const r = x.rawData;
-      return [x.patientStatus || r[0] || '', r[1] || '', r[13] || '', r[11] || '', r[15] || '', x.displayLOS ?? '', x.status || ''];
-    });
-
-    const csv = [headers, ...rows]
-      .map(arr => arr.map(v => `"${String(v).replaceAll('"','""')}"`).join(','))
-      .join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `patients_${currentSheet}_${type || 'ALL'}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  if(type === 'CARRY'){
+    filtered = lastData.filter(isCarryRow);
+  } else if(type === 'NEW'){
+    filtered = lastData.filter(isNewThisMonthRow);
   }
 
+  const headers = ['ประเภท','ลำดับ','HN','ชื่อ-สกุล','แผนก','LOS','สถานะ'];
+  const rows = filtered.map(x => {
+    const r = x.rawData;
+    return [x.patientStatus || r[0] || '', r[1] || '', r[13] || '', r[11] || '', r[15] || '', x.displayLOS ?? '', x.status || ''];
+  });
+
+  const csv = [headers, ...rows]
+    .map(arr => arr.map(v => `"${String(v).replaceAll('"','""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `patients_${currentSheet}_${type || 'ALL'}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
   // ================== Load / Init ==================
   document.addEventListener("DOMContentLoaded", () => {
     initSheets();
@@ -919,34 +919,13 @@ document.getElementById('dataForm').addEventListener('submit', async (e) => {
     Swal.fire('ผิดพลาด', err.toString(), 'error');
   }
 });
-    const iD = formatDateForSheet(document.getElementById('inDate').value);
-    const iT = document.getElementById('inTime').value;
-    const inT = document.getElementById('inType').value;
-    const iDep = document.getElementById('inDept').value;
-
-    if(inT === "รับใหม่"){
-      formData.newMark=iD; formData.newTime=iT; formData.newDept=iDep;
-    } else if(inT === "รับย้าย"){
-      formData.transferMark=iD; formData.transferTime=iT; formData.transferDept=iDep;
-    } else {
-      formData.referMark=iD; formData.referTime=iT; formData.referDept=iDep;
-    }
-
-    try{
-      await callApi('processData', { targetSheet: currentSheet, formData });
-      Swal.fire('สำเร็จ', '', 'success');
-      loadDashboard();
-      new bootstrap.Tab(document.querySelector('button[data-bs-target="#list-pane"]')).show();
-    }catch(err){
-      Swal.fire('ผิดพลาด', err.toString(), 'error');
-    }
-  });
+  
 
   function prepareNewForm(){
     document.getElementById('dataForm').reset();
     document.getElementById('rowId').value = "";
-document.getElementById('patientStatusStored').value = "รับใหม่";
-    callApi('getNextSeq', currentSheet).then(s => {
+document.getElementById('patientStatusStored').value = "";
+document.getElementById('inType').value = "รับใหม่";    callApi('getNextSeq', currentSheet).then(s => {
       document.getElementById('seq').value = s;
     }).catch(()=>{ document.getElementById('seq').value=""; });
 
