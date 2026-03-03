@@ -2,70 +2,87 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>ระบบทะเบียนผู้ป่วย (Cloud Electronic Record)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ระบบทะเบียนผู้ป่วย (Mobile Friendly)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
   <!-- CSS Library -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- DataTables + Responsive CSS -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css">
+  
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   
   <style>
-    /* บังคับใช้ฟอนต์ Sarabun ทุกส่วนเพื่อให้เป็นระเบียบเดียวกัน */
     * { font-family: 'Sarabun', sans-serif !important; }
+    body { background-color: #f4f7f6; color: #333; overflow-x: hidden; }
+    .container-fluid { padding: 15px; } /* ลด padding บนมือถือ */
     
-    body { background-color: #f4f7f6; color: #333; }
-    .container-fluid { padding: 25px; }
+    .card { border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 20px; background: #fff; }
+    .section-title { background-color: #0d6efd; color: white; padding: 12px 20px; border-radius: 15px 15px 0 0; font-weight: 600; font-size: 1rem; }
     
-    /* สไตล์ Card และหัวข้อ */
-    .card { border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 25px; background: #fff; }
-    .section-title { background-color: #0d6efd; color: white; padding: 15px 25px; border-radius: 15px 15px 0 0; font-weight: 600; font-size: 1.1rem; }
+    /* ปรับ Header ให้ยืดหยุ่นบนมือถือ */
+    .header-panel { background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
     
-    /* สไตล์ส่วนหัว (Header) */
-    .header-panel { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
+    /* ปรับขนาดตัวหนังสือตารางบนมือถือ */
+    table.dataTable { font-size: 0.85rem !important; }
+    .dtr-details { width: 100%; } /* ข้อมูลที่ซ่อนในปุ่ม + ให้เต็มจอ */
+
+    .form-label { font-weight: 600; font-size: 0.85rem; color: #555; margin-bottom: 3px; }
+    .form-control, .form-select { border-radius: 8px; padding: 8px 12px; font-size: 0.9rem; }
     
-    /* ฟอร์มและปุ่ม */
-    .form-label { font-weight: 600; font-size: 0.85rem; color: #555; margin-bottom: 5px; }
-    .form-control, .form-select { border-radius: 8px; padding: 10px 15px; font-size: 0.95rem; }
-    .nav-tabs .nav-link { color: #6c757d; font-weight: 500; border: none; padding: 12px 25px; }
-    .nav-tabs .nav-link.active { color: #0d6efd; background: transparent; border-bottom: 3px solid #0d6efd; font-weight: 600; }
-    
-    /* สถานะ Badge */
-    .badge { font-weight: 400; padding: 7px 12px; border-radius: 20px; }
+    /* ปรับปุ่มให้กดง่ายบนมือถือ (Touch Target) */
+    .btn { padding: 10px 15px; }
+    .btn-sm { padding: 5px 10px; }
+
+    @media (max-width: 576px) {
+      .header-panel { text-align: center; }
+      .header-panel .d-flex { flex-direction: column !important; width: 100%; }
+      #sheetSelector { width: 100% !important; margin-bottom: 10px; }
+      .btn-danger { width: 100%; }
+      h3 { font-size: 1.25rem; }
+    }
   </style>
 </head>
 <body>
 
 <div class="container-fluid">
-  <!-- ส่วนหัวและระบบเลือกชีท -->
-  <div class="header-panel d-flex justify-content-between align-items-center flex-wrap gap-3">
-    <div>
-      <h3 class="text-primary fw-bold m-0">ระบบทะเบียนผู้ป่วย (Cloud)</h3>
-      <div id="currentTime" class="text-muted small"></div>
-    </div>
-    <div class="d-flex align-items-center gap-2">
-      <label class="fw-bold small text-nowrap">เลือกเดือน/ชีท:</label>
-      <select id="sheetSelector" class="form-select form-select-sm" style="width: 220px;" onchange="onSheetChange()"></select>
-      <button class="btn btn-sm btn-danger px-3 rounded-pill" onclick="closeMonthUI()">ปิดยอดเดือน</button>
+  <!-- Header -->
+  <div class="header-panel shadow-sm">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+      <div class="mb-2">
+        <h3 class="text-primary fw-bold m-0">ระบบทะเบียนผู้ป่วย</h3>
+        <div id="currentTime" class="text-muted small"></div>
+      </div>
+      <div class="d-flex align-items-center flex-wrap gap-2 w-sm-100">
+        <select id="sheetSelector" class="form-select form-select-sm" style="width: 180px;" onchange="onSheetChange()"></select>
+        <button class="btn btn-sm btn-danger rounded-pill" onclick="closeMonthUI()">ปิดยอด</button>
+      </div>
     </div>
   </div>
 
-  <!-- แท็บเมนู -->
-  <ul class="nav nav-tabs mb-4" id="mainTab">
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#list-pane" onclick="loadDashboard()">แดชบอร์ด</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#form-pane" onclick="prepareNewForm()">ลงทะเบียน / แก้ไข</button></li>
+  <!-- Tabs -->
+  <ul class="nav nav-pills nav-fill mb-3 bg-white p-1 rounded-pill shadow-sm" id="mainTab" role="tablist">
+    <li class="nav-item">
+      <button class="nav-link active rounded-pill" data-bs-toggle="tab" data-bs-target="#list-pane" onclick="loadDashboard()">แดชบอร์ด</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link rounded-pill" data-bs-toggle="tab" data-bs-target="#form-pane" onclick="prepareNewForm()">ลงทะเบียน</button>
+    </li>
   </ul>
 
   <div class="tab-content">
-    <!-- TAB 1: แดชบอร์ด -->
+    <!-- DASHBOARD -->
     <div class="tab-pane fade show active" id="list-pane">
-      <div class="row mb-4 text-center">
-        <div class="col-md-4"><div class="card bg-primary text-white p-3"><h5>ทั้งหมด</h5><h2 id="totalCount">0</h2></div></div>
-        <div class="col-md-4"><div class="card bg-warning text-dark p-3"><h5>ยังรักษาอยู่</h5><h2 id="activeCount">0</h2></div></div>
-        <div class="col-md-4"><div class="card bg-success text-white p-3"><h5>จำหน่ายแล้ว</h5><h2 id="dcCount">0</h2></div></div>
+      <div class="row g-2 mb-3 text-center">
+        <div class="col-4"><div class="card bg-primary text-white p-2"><h6>ทั้งหมด</h6><h4 id="totalCount">0</h4></div></div>
+        <div class="col-4"><div class="card bg-warning text-dark p-2"><h6>รักษา</h6><h4 id="activeCount">0</h4></div></div>
+        <div class="col-4"><div class="card bg-success text-white p-2"><h6>D/C</h6><h4 id="dcCount">0</h4></div></div>
       </div>
-      <div class="card p-4">
-        <table id="patientTable" class="table table-hover w-100">
+      <div class="card p-2 p-md-4">
+        <!-- เพิ่ม class responsive และ nowrap เพื่อความสวยงาม -->
+        <table id="patientTable" class="table table-hover w-100 dt-responsive nowrap">
           <thead>
             <tr>
               <th>ลำดับ</th><th>HN</th><th>ชื่อ-นามสกุล</th><th>Ward</th><th>วันที่รับ</th><th>สถานะ</th><th>จัดการ</th>
@@ -76,70 +93,59 @@
       </div>
     </div>
 
-    <!-- TAB 2: ฟอร์มลงทะเบียน/แก้ไข -->
+    <!-- FORM -->
     <div class="tab-pane fade" id="form-pane">
       <form id="dataForm">
         <input type="hidden" id="rowId">
         
-        <!-- ส่วนที่ 1: การรับเข้า -->
         <div class="card">
           <div class="section-title" id="formHeader">ข้อมูลการรับเข้า</div>
-          <div class="card-body row">
-            <div class="col-md-2 mb-3"><label class="form-label">ลำดับ</label><input type="text" class="form-control bg-light" id="seq" readonly></div>
-            <div class="col-md-3 mb-3">
-              <label class="form-label">ประเภท</label>
-              <select class="form-select" id="inType">
-                <option value="รับใหม่">รับใหม่</option><option value="รับย้าย">รับย้าย</option><option value="รับ Refer">รับ Refer</option>
-              </select>
-            </div>
-            <div class="col-md-3 mb-3"><label class="form-label">วันที่รับ</label><input type="date" class="form-control" id="inDate" required onchange="calculateLOS()"></div>
-            <div class="col-md-2 mb-3"><label class="form-label">เวลา</label><input type="time" class="form-control" id="inTime" required></div>
-            <div class="col-md-2 mb-3"><label class="form-label">แผนกต้นทาง</label><input type="text" class="form-control" id="inDept"></div>
+          <div class="card-body row g-2">
+            <div class="col-4 col-md-2"><label class="form-label">ลำดับ</label><input type="text" class="form-control bg-light" id="seq" readonly></div>
+            <div class="col-8 col-md-3"><label class="form-label">ประเภท</label><select class="form-select" id="inType"><option value="รับใหม่">รับใหม่</option><option value="รับย้าย">รับย้าย</option><option value="รับ Refer">รับ Refer</option></select></div>
+            <div class="col-6 col-md-3"><label class="form-label">วันที่รับ</label><input type="date" class="form-control" id="inDate" required onchange="calculateLOS()"></div>
+            <div class="col-6 col-md-2"><label class="form-label">เวลา</label><input type="time" class="form-control" id="inTime" required></div>
+            <div class="col-12 col-md-2"><label class="form-label">แผนกต้นทาง</label><input type="text" class="form-control" id="inDept"></div>
           </div>
         </div>
 
-        <!-- ส่วนที่ 2: ข้อมูลผู้ป่วย -->
         <div class="card">
           <div class="section-title bg-info text-white">ข้อมูลผู้ป่วย</div>
-          <div class="card-body row">
-            <div class="col-md-6 mb-3"><label class="form-label">ชื่อ-นามสกุล</label><input type="text" class="form-control" id="patientName" required></div>
-            <div class="col-md-2 mb-3"><label class="form-label">ปี</label><input type="number" class="form-control" id="ageYear" value="0"></div>
-            <div class="col-md-2 mb-3"><label class="form-label">เดือน</label><input type="number" class="form-control" id="ageMonth" value="0"></div>
-            <div class="col-md-2 mb-3"><label class="form-label">วัน</label><input type="number" class="form-control" id="ageDay" value="0"></div>
-            <div class="col-md-3 mb-3"><label class="form-label">HN</label><input type="text" class="form-control" id="hn"></div>
-            <div class="col-md-3 mb-3"><label class="form-label">AN</label><input type="text" class="form-control" id="an"></div>
-            <div class="col-md-3 mb-3"><label class="form-label">Ward (แผนก)</label><select class="form-select" id="ward"></select></div>
-            <div class="col-md-3 mb-3"><label class="form-label">สาย (Service Line)</label><select class="form-select" id="sai"></select></div>
-            <div class="col-md-4 mb-3"><label class="form-label">สิทธิการรักษา</label><select class="form-select" id="sithi"></select></div>
-            <div class="col-md-4 mb-3"><label class="form-label">Dx. แรกรับ</label><input type="text" class="form-control" id="dx1"></div>
-            <div class="col-md-4 mb-3"><label class="form-label">Dx. สุดท้าย</label><input type="text" class="form-control" id="dx2"></div>
-            <div class="col-md-12 mb-3"><label class="form-label">ที่อยู่</label><input type="text" class="form-control" id="address"></div>
+          <div class="card-body row g-2">
+            <div class="col-12 col-md-6"><label class="form-label">ชื่อ-นามสกุล</label><input type="text" class="form-control" id="patientName" required></div>
+            <div class="col-4"><label class="form-label">ปี</label><input type="number" class="form-control" id="ageYear" value="0"></div>
+            <div class="col-4"><label class="form-label">เดือน</label><input type="number" class="form-control" id="ageMonth" value="0"></div>
+            <div class="col-4"><label class="form-label">วัน</label><input type="number" class="form-control" id="ageDay" value="0"></div>
+            <div class="col-6 col-md-3"><label class="form-label">HN</label><input type="text" class="form-control" id="hn"></div>
+            <div class="col-6 col-md-3"><label class="form-label">AN</label><input type="text" class="form-control" id="an"></div>
+            <div class="col-6 col-md-3"><label class="form-label">Ward</label><select class="form-select" id="ward"></select></div>
+            <div class="col-6 col-md-3"><label class="form-label">สาย</label><select class="form-select" id="sai"></select></div>
+            <div class="col-12 col-md-4"><label class="form-label">สิทธิการรักษา</label><select class="form-select" id="sithi"></select></div>
+            <div class="col-12 col-md-4"><label class="form-label">Dx. แรกรับ</label><input type="text" class="form-control" id="dx1"></div>
+            <div class="col-12 col-md-4"><label class="form-label">Dx. สุดท้าย</label><input type="text" class="form-control" id="dx2"></div>
+            <div class="col-12"><label class="form-label">ที่อยู่</label><input type="text" class="form-control" id="address"></div>
           </div>
         </div>
 
-        <!-- ส่วนที่ 3: การจำหน่าย -->
         <div class="card border-warning">
-          <div class="section-title bg-warning text-dark">ข้อมูลการจำหน่าย / Outcome</div>
-          <div class="card-body row">
-            <div class="col-md-3 mb-3"><label class="form-label">D/C วันที่</label><input type="date" class="form-control" id="dcDate" onchange="calculateLOS()"></div>
-            <div class="col-md-3 mb-3"><label class="form-label">วันนอน (LOS)</label><input type="text" class="form-control fw-bold text-danger" id="los" readonly></div>
-            <div class="col-md-3 mb-3"><label class="form-label">F/U (นัดตรวจ)</label><input type="text" class="form-control" id="fu"></div>
-            <div class="col-md-3 mb-3"><label class="form-label">Admit < 6 ชม. (ระบุ ชม.)</label><input type="text" class="form-control" id="admitUnder6" oninput="calculateLOS()"></div>
-            
-            <div class="col-md-4 mb-3"><label class="form-label">ย้ายไปแผนก</label><input type="text" class="form-control" id="transferOut"></div>
-            <div class="col-md-4 mb-3"><label class="form-label">วันที่ย้ายแผนก</label><input type="date" class="form-control" id="transferOutDate" onchange="calculateLOS()"></div>
-            <div class="col-md-4 mb-3"><label class="form-label">ตาย (วันที่)</label><input type="date" class="form-control" id="deathDate" onchange="calculateLOS()"></div>
-
-            <div class="col-md-4 mb-3"><label class="form-label">Refer Out (วันที่)</label><input type="date" class="form-control" id="referOutDate" onchange="calculateLOS()"></div>
-            <div class="col-md-8 mb-3"><label class="form-label">Refer ไปโรงพยาบาลปลายทาง</label><input type="text" class="form-control" id="referDestination"></div>
-
-            <div class="col-md-6 mb-3"><label class="form-label">หนี (วันที่)</label><input type="date" class="form-control" id="abscondDate" onchange="calculateLOS()"></div>
-            <div class="col-md-6 mb-3"><label class="form-label">ปฏิเสธการรักษา (วันที่)</label><input type="date" class="form-control" id="refuseDate" onchange="calculateLOS()"></div>
+          <div class="section-title bg-warning text-dark">ข้อมูลการจำหน่าย</div>
+          <div class="card-body row g-2">
+            <div class="col-6 col-md-3"><label class="form-label">D/C วันที่</label><input type="date" class="form-control" id="dcDate" onchange="calculateLOS()"></div>
+            <div class="col-6 col-md-3"><label class="form-label">วันนอน (LOS)</label><input type="text" class="form-control fw-bold text-danger text-center" id="los" readonly></div>
+            <div class="col-12 col-md-3"><label class="form-label">F/U (นัดตรวจ)</label><input type="text" class="form-control" id="fu"></div>
+            <div class="col-12 col-md-3"><label class="form-label">Admit < 6 ชม. (ชม.)</label><input type="text" class="form-control" id="admitUnder6" oninput="calculateLOS()"></div>
+            <div class="col-6 col-md-4"><label class="form-label">ย้ายไปแผนก</label><input type="text" class="form-control" id="transferOut"></div>
+            <div class="col-6 col-md-4"><label class="form-label">วันที่ย้าย</label><input type="date" class="form-control" id="transferOutDate" onchange="calculateLOS()"></div>
+            <div class="col-6 col-md-4"><label class="form-label">ตาย (วันที่)</label><input type="date" class="form-control" id="deathDate" onchange="calculateLOS()"></div>
+            <div class="col-6 col-md-4"><label class="form-label">Refer Out (วันที่)</label><input type="date" class="form-control" id="referOutDate" onchange="calculateLOS()"></div>
+            <div class="col-12 col-md-8"><label class="form-label">Refer ไปที่</label><input type="text" class="form-control" id="referDestination"></div>
+            <div class="col-6 col-md-6"><label class="form-label">หนี (วันที่)</label><input type="date" class="form-control" id="abscondDate" onchange="calculateLOS()"></div>
+            <div class="col-6 col-md-6"><label class="form-label">ปฏิเสธ (วันที่)</label><input type="date" class="form-control" id="refuseDate" onchange="calculateLOS()"></div>
           </div>
         </div>
 
-        <div class="text-center mt-4 mb-5">
-          <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow" id="btnSubmit">บันทึกข้อมูลลงฐานข้อมูล</button>
+        <div class="text-center mt-3 mb-5">
+          <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow">บันทึกข้อมูล</button>
         </div>
       </form>
     </div>
@@ -150,15 +156,16 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<!-- Responsive DataTables JS -->
+<script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-  // !!! แก้ไขลิงก์ Web App ตรงนี้ !!!
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiZ45I4O8R3-vpxlZLcVY5YWhVkR7qe7sySnOhm7Gg_U2K_5rMZCQcYcucdSFk17g/exec"; 
   let currentSheet = "";
   let dataTable;
 
-  // --- API Helper ---
   async function callApi(action, data = null) {
     try {
       const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action, data }) });
@@ -171,7 +178,6 @@
     }
   }
 
-  // --- Start Up ---
   document.addEventListener("DOMContentLoaded", () => {
     initSheets();
     callApi('getDropdownData').then(d => {
@@ -197,7 +203,16 @@
     items.forEach(i => el.innerHTML += `<option value="${i}">${i}</option>`);
   }
 
-  // --- Date & Time Formatters ---
+  function formatTimeForInput(timeStr) {
+    if (!timeStr) return "";
+    let clean = timeStr.toString().trim().replace('.', ':');
+    let parts = clean.split(':');
+    if (parts.length >= 2) {
+        return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+    }
+    return "";
+  }
+
   function formatDateForInput(dateStr) {
     if (!dateStr || !dateStr.includes('/')) return "";
     const p = dateStr.split('/');
@@ -211,35 +226,6 @@
     return `${p[2]}/${p[1]}/${parseInt(p[0]) + 543}`;
   }
 
-  function formatTimeForInput(timeStr) {
-    if (!timeStr) return "";
-    let clean = timeStr.toString().trim().replace('.', ':');
-    let parts = clean.split(':');
-    if (parts.length >= 2) {
-        let hh = parts[0].padStart(2, '0');
-        let mm = parts[1].padStart(2, '0');
-        return `${hh}:${mm}`;
-    }
-    return "";
-  }
-
-  // --- Age Logic ---
-  function getFormattedAge() {
-    return `${document.getElementById('ageYear').value} ปี ${document.getElementById('ageMonth').value} เดือน ${document.getElementById('ageDay').value} วัน`;
-  }
-
-  function parseAgeToFields(ageStr) {
-    if (!ageStr) return;
-    const regex = /(\d+)\s*ปี\s*(\d+)\s*เดือน\s*(\d+)\s*วัน/;
-    const match = ageStr.match(regex);
-    if (match) {
-      document.getElementById('ageYear').value = match[1];
-      document.getElementById('ageMonth').value = match[2];
-      document.getElementById('ageDay').value = match[3];
-    } else if (!isNaN(ageStr)) { document.getElementById('ageYear').value = ageStr; }
-  }
-
-  // --- LOS Logic ---
   function calculateLOS() {
     if (document.getElementById('admitUnder6').value.trim() !== "") { document.getElementById('los').value = "0"; return; }
     const s = document.getElementById('inDate').value;
@@ -250,9 +236,8 @@
     } else document.getElementById('los').value = "";
   }
 
-  // --- Dashboard Logic ---
   function loadDashboard() {
-    Swal.fire({ title: 'กำลังโหลดข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'กำลังโหลด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     callApi('getAllData', currentSheet).then(data => {
       if (dataTable) dataTable.destroy();
       let html = '', total = data.length, active = 0, dc = 0;
@@ -267,18 +252,21 @@
       document.getElementById('activeCount').innerText = active;
       document.getElementById('dcCount').innerText = dc;
       document.getElementById('tableBody').innerHTML = html;
-      dataTable = $('#patientTable').DataTable({ order: [[0, 'desc']], language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/th.json' } });
+      
+      // Initialize DataTable with Responsive
+      dataTable = $('#patientTable').DataTable({ 
+        order: [[0, 'desc']], 
+        responsive: true,
+        language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/th.json' }
+      });
       Swal.close();
     });
   }
 
-  // --- Edit Logic (Mapping 31 Columns) ---
   function editPatient(item) {
     const raw = item.rawData;
     document.getElementById('rowId').value = item.rowId;
     document.getElementById('seq').value = raw[0];
-    
-    // Admission Mapping
     let inType = "รับใหม่", inDate = raw[1], inTime = raw[2], inDept = raw[3];
     if (raw[4] && raw[4].trim() !== "") { inType = "รับย้าย"; inDate = raw[4]; inTime = raw[5]; inDept = raw[6]; }
     else if (raw[7] && raw[7].trim() !== "") { inType = "รับ Refer"; inDate = raw[7]; inTime = raw[8]; inDept = raw[9]; }
@@ -287,24 +275,15 @@
     document.getElementById('inDate').value = formatDateForInput(inDate);
     document.getElementById('inTime').value = formatTimeForInput(inTime);
     document.getElementById('inDept').value = inDept;
-    
-    // Patient Details
     document.getElementById('patientName').value = raw[10];
-    parseAgeToFields(raw[11]);
-    document.getElementById('hn').value = raw[12];
-    document.getElementById('an').value = raw[13];
-    document.getElementById('ward').value = raw[14];
-    document.getElementById('sai').value = raw[15];
-    document.getElementById('sithi').value = raw[16];
-    document.getElementById('dx1').value = raw[17];
-    document.getElementById('dx2').value = raw[18];
-    
-    // Discharge Details
-    document.getElementById('dcDate').value = formatDateForInput(raw[19]);
-    document.getElementById('fu').value = raw[20];
-    document.getElementById('admitUnder6').value = raw[21];
-    document.getElementById('los').value = raw[22];
-    document.getElementById('transferOut').value = raw[23];
+    const ageMatch = (raw[11] || "").match(/(\d+) ปี (\d+) เดือน (\d+) วัน/);
+    if (ageMatch) { document.getElementById('ageYear').value = ageMatch[1]; document.getElementById('ageMonth').value = ageMatch[2]; document.getElementById('ageDay').value = ageMatch[3]; }
+    document.getElementById('hn').value = raw[12]; document.getElementById('an').value = raw[13];
+    document.getElementById('ward').value = raw[14]; document.getElementById('sai').value = raw[15];
+    document.getElementById('sithi').value = raw[16]; document.getElementById('dx1').value = raw[17];
+    document.getElementById('dx2').value = raw[18]; document.getElementById('dcDate').value = formatDateForInput(raw[19]);
+    document.getElementById('fu').value = raw[20]; document.getElementById('admitUnder6').value = raw[21];
+    document.getElementById('los').value = raw[22]; document.getElementById('transferOut').value = raw[23];
     document.getElementById('transferOutDate').value = formatDateForInput(raw[24]);
     document.getElementById('abscondDate').value = formatDateForInput(raw[25]);
     document.getElementById('refuseDate').value = formatDateForInput(raw[26]);
@@ -314,32 +293,25 @@
     document.getElementById('address').value = raw[30];
     
     new bootstrap.Tab(document.querySelector('button[data-bs-target="#form-pane"]')).show();
-    document.getElementById('formHeader').innerText = "แก้ไขข้อมูลผู้ป่วย: " + raw[10];
+    window.scrollTo(0,0);
   }
 
-  // --- Save Logic ---
   document.getElementById('dataForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    Swal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     
     const inType = document.getElementById('inType').value;
     const formData = {
       rowId: document.getElementById('rowId').value,
       seq: document.getElementById('seq').value,
       patientName: document.getElementById('patientName').value,
-      age: getFormattedAge(),
-      hn: document.getElementById('hn').value,
-      an: document.getElementById('an').value,
-      ward: document.getElementById('ward').value,
-      sai: document.getElementById('sai').value,
-      sithi: document.getElementById('sithi').value,
-      dx1: document.getElementById('dx1').value,
-      dx2: document.getElementById('dx2').value,
-      address: document.getElementById('address').value,
-      los: document.getElementById('los').value,
-      fu: document.getElementById('fu').value,
-      admitUnder6: document.getElementById('admitUnder6').value,
-      transferOut: document.getElementById('transferOut').value,
+      age: `${document.getElementById('ageYear').value} ปี ${document.getElementById('ageMonth').value} เดือน ${document.getElementById('ageDay').value} วัน`,
+      hn: document.getElementById('hn').value, an: document.getElementById('an').value,
+      ward: document.getElementById('ward').value, sai: document.getElementById('sai').value,
+      sithi: document.getElementById('sithi').value, dx1: document.getElementById('dx1').value,
+      dx2: document.getElementById('dx2').value, address: document.getElementById('address').value,
+      los: document.getElementById('los').value, fu: document.getElementById('fu').value,
+      admitUnder6: document.getElementById('admitUnder6').value, transferOut: document.getElementById('transferOut').value,
       referDestination: document.getElementById('referDestination').value,
       dcDate: formatDateForSheet(document.getElementById('dcDate').value),
       transferOutDate: formatDateForSheet(document.getElementById('transferOutDate').value),
@@ -357,28 +329,25 @@
     else { formData.referMark = iDate; formData.referTime = iTime; formData.referDept = iDept; }
 
     await callApi('processData', { targetSheet: currentSheet, formData: formData });
-    Swal.fire('บันทึกสำเร็จ', 'ข้อมูลถูกบันทึกเรียบร้อยแล้ว', 'success');
+    Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อย', 'success');
     loadDashboard();
     new bootstrap.Tab(document.querySelector('button[data-bs-target="#list-pane"]')).show();
   });
 
-  // --- Close Month UI ---
   async function closeMonthUI() {
     const { value: nextMonth } = await Swal.fire({
       title: 'ปิดยอดเดือน',
-      html: '<p class="small">ระบบจะสร้างชีท "ยอดยกมา" และ "ชีทใหม่" ให้อัตโนมัติ</p>',
       input: 'text', inputLabel: 'ชื่อเดือนใหม่ (เช่น มีนาคม 69)',
       showCancelButton: true, inputValidator: (v) => { if (!v) return 'กรุณาระบุชื่อ!' }
     });
     if (nextMonth) {
-      Swal.fire({ title: 'กำลังยกยอดข้อมูล...', didOpen: () => Swal.showLoading() });
-      const res = await callApi('closeMonthAction', { currentSheetName: currentSheet, nextMonthName: nextMonth });
-      await Swal.fire('สำเร็จ', res, 'success');
+      Swal.fire({ title: 'กำลังยกยอด...', didOpen: () => Swal.showLoading() });
+      await callApi('closeMonthAction', { currentSheetName: currentSheet, nextMonthName: nextMonth });
+      Swal.fire('สำเร็จ', 'ดำเนินการแล้ว', 'success');
       initSheets();
     }
   }
 
-  // --- PDF Printing Logic ---
   function printPDF(item) {
     const win = window.open("", "_blank");
     if (!win) { Swal.fire('Error', 'โปรดอนุญาต Pop-up', 'warning'); return; }
@@ -409,7 +378,6 @@
   function prepareNewForm() {
     document.getElementById('dataForm').reset();
     document.getElementById('rowId').value = "";
-    document.getElementById('formHeader').innerText = "ลงทะเบียนผู้ป่วยใหม่";
     callApi('getNextSeq', currentSheet).then(s => document.getElementById('seq').value = s);
     new bootstrap.Tab(document.querySelector('button[data-bs-target="#form-pane"]')).show();
   }
