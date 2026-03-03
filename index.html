@@ -142,32 +142,38 @@
   }
 
  // 1. คำนวณวันนอนของคนที่ยังรักษาอยู่ (ให้ถึงสิ้นเดือนของชีทนั้น)
-  function getActiveLOS(inDateStr) {
+// คำนวณวันนอน (คนที่ยังรักษาอยู่) -> หาจุดสิ้นเดือน ลบ วันเริ่ม (+1 วัน)
+  function getActiveLOS(inDateStr, pStatus) {
     if (!inDateStr) return 0;
     try {
       const p = inDateStr.split('/');
       const dIn = new Date(parseInt(p[2])-543, parseInt(p[1])-1, parseInt(p[0]));
-      
       const mS = getMonthStartFromSheet();
-      let dEnd = new Date(); // วันนี้
+      let dStart = dIn;
       
-      // ถ้าเปิดดูชีทเดือนในอดีต (ที่สิ้นเดือนไปแล้ว) ให้หยุดนับที่วันสุดท้ายของเดือนนั้น
+      // กุมภาพันธ์ ตัดวันที่ 1 (สำหรับยอดยกมา)
+      if (pStatus === "ยอดยกมา" && mS && dIn < mS) {
+        dStart = mS;
+      }
+      
+      let dEnd = new Date(); // วันนี้
       if (mS) {
         const lastDayOfMonth = new Date(mS.getFullYear(), mS.getMonth() + 1, 0);
         if (dEnd > lastDayOfMonth) {
-            dEnd = lastDayOfMonth;
+          dEnd = lastDayOfMonth; // หาจุดสิ้นเดือน (เช่น 31 ม.ค.)
         }
       }
       
-      const diff = Math.floor((dEnd - dIn) / (1000 * 60 * 60 * 24)) + 1; // +1 เพื่อนับรวมวันแรก
+      // ลบกัน (+1 วัน)
+      const diff = Math.floor((dEnd - dStart) / (1000 * 60 * 60 * 24)) + 1;
       return diff >= 0 ? diff : 0;
     } catch(e) { return 0; }
   }
 
-  // 2. คำนวณวันนอนตอนกรอกแบบฟอร์ม
+  // คำนวณวันนอน (ตอนกดจำหน่ายในฟอร์ม) -> วันออก ลบ วันเริ่ม (ไม่บวก 1)
   function calculateLOS() {
     if (document.getElementById('admitUnder6').value.trim() !== "") { 
-        document.getElementById('los').value = "0"; return; 
+      document.getElementById('los').value = "0"; return; 
     }
     
     const sVal = document.getElementById('inDate').value;
@@ -176,13 +182,21 @@
     if (sVal && eVal) {
       let start = new Date(sVal);
       let end = new Date(eVal);
+      const mS = getMonthStartFromSheet();
+      const status = document.getElementById('patientStatusStored').value || "รับใหม่";
       
-      // เอา (วันออก - วันรับ) แบบตรงไปตรงมา ไม่สนว่าเป็นยอดยกมาหรือไม่
+      // ตัดยอดวันที่ 1 สำหรับยอดยกมา
+      if (status === "ยอดยกมา" && mS && start < mS) {
+        start = mS; 
+      }
+      
+      // สำหรับเคสจำหน่าย เอาวันออกลบวันเริ่มตรงๆ (เช่น 5 ก.พ. - 1 ก.พ. = 4 วัน)
       let diff = Math.floor((end - start) / (1000*60*60*24));
       document.getElementById('los').value = diff >= 0 ? diff : 0;
+    } else {
+      document.getElementById('los').value = "";
     }
   }
-
 
   function loadDashboard() {
     Swal.fire({ title: 'โหลด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
