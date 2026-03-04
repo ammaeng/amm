@@ -845,8 +845,14 @@ function buildReportSkeleton(monthTitle){
             <div class="col-6 col-lg-3"><div class="kpi-card">
               <div class="kpi-label">จำหน่ายทั้งหมด (Separations)</div>
               <div class="kpi-value text-success" id="kpiOutTotal">0</div>
-              <div class="kpi-sub">D/C <b id="kpiOutDC">0</b> | ย้าย <b id="kpiOutTO">0</b> | ReferOut <b id="kpiOutRO">0</b> | ตาย <b id="kpiOutDeath">0</b></div>
-            </div></div>
+<div class="kpi-sub">
+  D/C <b id="kpiOutDC">0</b> |
+  ย้าย <b id="kpiOutTO">0</b> |
+  หนี <b id="kpiOutAbs">0</b> |
+  ปฏิเสธ <b id="kpiOutRefu">0</b> |
+  ReferOut <b id="kpiOutRO">0</b> |
+  ตาย <b id="kpiOutDeath">0</b>
+</div>            </div></div>
 
             <div class="col-6 col-lg-3"><div class="kpi-card">
               <div class="kpi-label">คงเหลือสิ้นเดือน (EOM Census)</div>
@@ -1142,6 +1148,8 @@ if (summary) {
       document.getElementById('kpiOutTO').innerText = outTO;
       document.getElementById('kpiOutRO').innerText = outRO;
       document.getElementById('kpiOutDeath').innerText = outDeath;
+      document.getElementById('kpiOutAbs').innerText = outAbs;
+document.getElementById('kpiOutRefu').innerText = outRefu;
       document.getElementById('kpiEOM').innerText = eom;
       document.getElementById('kpiPatientDays').innerText = patientDays;
       document.getElementById('kpiALOSOut').innerText = (outTotal > 0) ? (patientDays / outTotal).toFixed(2) : "0.00";
