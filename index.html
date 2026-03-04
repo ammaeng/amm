@@ -429,6 +429,7 @@
 
   // Report charts instance
   let repChartIn, repChartOut, repChartLOS;
+  let lastTriggerEl = null;   // ✅ ย้ายมาที่นี่ (ก่อนทุกฟังก์ชัน)
 
   // ================== API ==================
   async function callApi(action, data = null) {
@@ -748,6 +749,12 @@
       fillSelect('sai', d.sai);
       document.getElementById('dxList').innerHTML = (d.dx || []).map(x => `<option value="${x}">`).join('');
     });
+
+      // ✅ เพิ่มส่วนนี้
+  const modalEl = document.getElementById('reportModal');
+  modalEl.addEventListener('hidden.bs.modal', () => {
+    lastTriggerEl?.focus();
+  });
 
     setInterval(() => {
       document.getElementById('currentTime').innerText = new Date().toLocaleString('th-TH');
@@ -1168,7 +1175,12 @@ document.getElementById('kpiOutRefu').innerText = outRefu;
       });
       
       Swal.close();
-      new bootstrap.Modal(document.getElementById('reportModal')).show();
+
+lastTriggerEl = document.activeElement; // เก็บ element ที่กด/โฟกัสอยู่
+document.activeElement?.blur();         // กัน focus ค้างใน element ที่จะถูก aria-hidden
+
+const modalEl = document.getElementById('reportModal');
+bootstrap.Modal.getOrCreateInstance(modalEl).show();
     } catch(err) {
       Swal.fire('ผิดพลาด', err.toString(), 'error');
     }
@@ -1189,6 +1201,8 @@ document.getElementById('kpiOutRefu').innerText = outRefu;
       initSheets();
     }
   }
+
+  let lastTriggerEl = null;
 </script>
 
 </body>
