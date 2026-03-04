@@ -1210,6 +1210,53 @@
     initSheets();
   }
 }
+
+  async function showFullReport() {
+    Swal.fire({ title: 'คำนวณรายงานสรุป...', didOpen: () => Swal.showLoading() });
+
+    try {
+      const [patients, summary] = await Promise.all([
+        callApi('getAllData', currentSheet),
+        callApi('getMonthlySummaryRow', currentSheet)
+      ]);
+      
+      document.getElementById('reportMonthTitle').innerText = currentSheet;
+      destroyReportCharts();
+      document.getElementById('reportResult').innerHTML = buildReportSkeleton(currentSheet);
+
+      // --- ส่วนแสดงผล BOR จาก Snapshot ---
+      if (summary) {
+        const borEl = document.getElementById('kpiBOR');
+        borEl.innerText = summary.bor + '%';
+        borEl.className = 'kpi-value ' + (summary.bor > 90 ? 'text-danger' : (summary.bor > 70 ? 'text-success' : 'text-primary'));
+        document.getElementById('kpiBedsSub').innerHTML = `จากจำนวนเตียง <b>${summary.beds}</b> เตียง`;
+      }
+
+      // ... (โค้ดคำนวณ KPI และวาดกราฟที่เหลือเหมือนเดิม) ...
+      // ปิดท้ายด้วย
+      Swal.close();
+      new bootstrap.Modal(document.getElementById('reportModal')).show();
+    } catch(err) {
+      Swal.fire('ผิดพลาด', err.toString(), 'error');
+    }
+  }
+
+  // ปรับแก้ปุ่มปิดเดือนให้รับค่าเตียง
+  async function closeMonthUI() {
+    const { value: bedCount } = await Swal.fire({
+      title: 'ปิดยอดเดือน?',
+      text: 'ระบุจำนวนเตียงที่ใช้จริงในเดือนนี้:',
+      input: 'number',
+      inputValue: 20, 
+      showCancelButton: true
+    });
+
+    if (bedCount) {
+      Swal.fire({ title: 'กำลังดำเนินการ...', allowOutsideClick: false });
+      await callApi('closeMonthAction', { currentSheetName: currentSheet, bedCount: bedCount });
+      initSheets();
+    }
+  }
 </script>
 
 </body>
