@@ -753,10 +753,12 @@
 
 
       // ✅ เพิ่มส่วนนี้
-  const modalEl = document.getElementById('reportModal');
+const modalEl = document.getElementById('reportModal');
+if (modalEl) {
   modalEl.addEventListener('hidden.bs.modal', () => {
     lastTriggerEl?.focus();
   });
+}
 
     setInterval(() => {
       document.getElementById('currentTime').innerText = new Date().toLocaleString('th-TH');
@@ -1179,16 +1181,18 @@ document.getElementById('kpiOutRefu').innerText = outRefu;
         options: { plugins: { legend: { position: 'bottom' } } }
       });
       
-      Swal.close();
-
-
+Swal.close();
 
 const modalEl = document.getElementById('reportModal');
-bootstrap.Modal.getOrCreateInstance(modalEl).show();
-    } catch(err) {
-      Swal.fire('ผิดพลาด', err.toString(), 'error');
-    }
-  }
+if (!modalEl) throw new Error('ไม่พบ reportModal');
+
+const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+modal.show();
+
+// โฟกัสเข้า modal หลังเปิด เพื่อกัน aria-hidden warning
+setTimeout(() => {
+  modalEl.querySelector('.btn-close')?.focus();
+}, 0);
   // ปรับแก้ปุ่มปิดเดือนให้รับค่าเตียง
   async function closeMonthUI() {
     const { value: bedCount } = await Swal.fire({
