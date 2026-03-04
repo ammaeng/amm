@@ -1192,24 +1192,6 @@
     }
   }
 
- async function closeMonthUI() {
-  // ดึงค่า Default จาก Settings ถ้ามี (หรือให้ User ใส่เอง)
-  const { value: bedCount } = await Swal.fire({
-    title: 'ปิดยอดเดือน?',
-    text: 'ระบุจำนวนเตียงที่ใช้จริงในเดือนนี้:',
-    input: 'number',
-    inputValue: 20, // ค่าเริ่มต้นที่คุณใช้บ่อยที่สุด
-    showCancelButton: true,
-    confirmButtonText: 'ตกลง'
-  });
-
-  if (bedCount) {
-    Swal.fire({ title: 'กำลังดำเนินการ...', allowOutsideClick: false });
-    // ส่ง bedCount ไปด้วย
-    await callApi('closeMonthAction', { currentSheetName: currentSheet, bedCount: bedCount });
-    initSheets();
-  }
-}
 
   async function showFullReport() {
     Swal.fire({ title: 'คำนวณรายงานสรุป...', didOpen: () => Swal.showLoading() });
@@ -1232,8 +1214,12 @@
         document.getElementById('kpiBedsSub').innerHTML = `จากจำนวนเตียง <b>${summary.beds}</b> เตียง`;
       }
 
-      // ... (โค้ดคำนวณ KPI และวาดกราฟที่เหลือเหมือนเดิม) ...
-      // ปิดท้ายด้วย
+const typeOf = (item) => ((item.patientStatus || item.rawData?.[0] || "").trim());
+      const carry = patients.filter(x => typeOf(x) === "ยอดยกมา").length;
+      const inNew = patients.filter(x => typeOf(x) === "รับใหม่").length;
+      const inTransfer = patients.filter(x => typeOf(x) === "รับย้าย").length;
+      const inRefer = patients.filter(x => typeOf(x) === "รับ Refer").length;
+      const inTotal = inNew + inTransfer + inRefer;      // ปิดท้ายด้วย
       Swal.close();
       new bootstrap.Modal(document.getElementById('reportModal')).show();
     } catch(err) {
