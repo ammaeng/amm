@@ -750,12 +750,7 @@
       document.getElementById('dxList').innerHTML = (d.dx || []).map(x => `<option value="${x}">`).join('');
     });
 
-    const modalEl = document.getElementById('reportModal');
-if (modalEl) {
-  modalEl.addEventListener('hidden.bs.modal', () => {
-    lastTriggerEl?.focus();
-  });
-}
+
 
       // ✅ เพิ่มส่วนนี้
   const modalEl = document.getElementById('reportModal');
