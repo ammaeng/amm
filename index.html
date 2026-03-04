@@ -8,7 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -22,21 +22,57 @@
   <style>
     * { font-family: 'Sarabun', sans-serif !important; }
     body { background: #f4f7f6; color: #263238; }
+
     .card { border: 0; border-radius: 16px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
-    .top-title { font-weight: 800; letter-spacing: 0.2px; }
+    .top-title { font-weight: 900; letter-spacing: 0.2px; }
     .chip { padding: 6px 10px; border-radius: 999px; font-size: 12px; }
     .mini { background: #f8f9fa; border-radius: 14px; padding: 10px; }
     .mini .label { font-size: 12px; color: #6c757d; }
-    .mini .value { font-size: 28px; font-weight: 800; margin: 0; }
-    .section-title { font-weight: 800; }
+    .mini .value { font-size: 28px; font-weight: 900; margin: 0; }
+    .section-title { font-weight: 900; }
     .subtle { color: #6c757d; font-size: 12px; }
     .table thead th { white-space: nowrap; }
-    .long-stay { color:#dc3545; font-weight:800; }
-    .bg-grad {
-      background: linear-gradient(135deg, #0d6efd, #00bcd4);
-      color: white;
-    }
+    .long-stay { color:#dc3545; font-weight:900; }
+    .bg-grad { background: linear-gradient(135deg, #0d6efd, #00bcd4); color: white; }
     .sticky-actions { position: sticky; bottom: 12px; z-index: 2; }
+
+    /* ===== Report Pro UI ===== */
+    .kpi-card{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.08);
+      border-radius:14px;
+      padding:14px;
+      height:100%;
+    }
+    .kpi-label{ color:#6c757d; font-size:12px; }
+    .kpi-value{ font-size:30px; font-weight:900; line-height:1.1; margin-top:4px; }
+    .kpi-sub{ font-size:12px; color:#6c757d; margin-top:6px; }
+    .report-note{
+      background:#f8f9fa;
+      border:1px dashed rgba(0,0,0,.15);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:12px;
+      color:#546e7a;
+    }
+    .report-block{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.08);
+      border-radius:14px;
+      padding:14px;
+    }
+    .fw-black{ font-weight:900; }
+    .pill{
+      display:inline-flex;
+      gap:6px;
+      align-items:center;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,.10);
+      font-size:12px;
+      color:#37474f;
+      background:#fff;
+    }
   </style>
 </head>
 
@@ -307,6 +343,10 @@
               <input type="date" class="form-control" id="dcDate" onchange="calculateLOSPreview()">
             </div>
             <div class="col-6 col-md-3">
+              <label class="form-label">F/U</label>
+              <input type="text" class="form-control" id="fu" placeholder="เช่น นัด 7 วัน / OPD / โทรติดตาม">
+            </div>
+            <div class="col-6 col-md-3">
               <label class="form-label">LOS (Preview)</label>
               <input type="text" class="form-control text-center fw-bold" id="los" readonly>
             </div>
@@ -366,10 +406,12 @@
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content border-0 shadow">
       <div class="modal-header bg-success text-white">
-        <h5 class="modal-title fw-bold">รายงานสถิติเดือน: <span id="reportMonthTitle"></span></h5>
+        <h5 class="modal-title fw-bold">รายงานสรุปเดือน (Professional): <span id="reportMonthTitle"></span></h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body bg-light" id="reportResult"></div>
+      <div class="modal-body bg-light">
+        <div id="reportResult">กำลังโหลด...</div>
+      </div>
     </div>
   </div>
 </div>
@@ -378,11 +420,15 @@
 
 <script>
   // ================== CONFIG ==================
-  const SCRIPT_URL = "PUT_YOUR_WEBAPP_URL_HERE"; // <-- แก้ตรงนี้
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiZ45I4O8R3-vpxlZLcVY5YWhVkR7qe7sySnOhm7Gg_U2K_5rMZCQcYcucdSFk17g/exec";
 
   let currentSheet = "";
   let carryDT, newDT, sithiChart, saiChart;
+
   let lastData = [];
+
+  // Report charts instance
+  let repChartIn, repChartOut, repChartLOS;
 
   // ================== API ==================
   async function callApi(action, data = null) {
@@ -426,15 +472,67 @@
     if (v.length > 2) el.value = v.slice(0, -2) + '-' + v.slice(-2);
   }
 
-  // Preview LOS (เพื่อ UX ในฟอร์มเท่านั้น) — LOS จริงในตารางใช้จาก backend
+  function safeInt(v){ const n=parseInt(v,10); return isNaN(n)?0:n; }
+
+  // ================== Sheet picking (latest) ==================
+  function sheetNameToDate(sheetName) {
+    if (!sheetName) return null;
+
+    const monthMap = {
+      "มกราคม":0,"กุมภาพันธ์":1,"มีนาคม":2,"เมษายน":3,"พฤษภาคม":4,"มิถุนายน":5,
+      "กรกฎาคม":6,"สิงหาคม":7,"กันยายน":8,"ตุลาคม":9,"พฤศจิกายน":10,"ธันวาคม":11,
+      "มกรา":0,"กุมภา":1,"มีนา":2,"เมษา":3,"พฤษภา":4,"มิถุนา":5,
+      "กรกฎา":6,"สิงหา":7,"กันยา":8,"ตุลา":9,"พฤศจิกา":10,"ธันวา":11
+    };
+
+    let mIdx = null;
+    for (const m in monthMap) {
+      if (sheetName.includes(m)) { mIdx = monthMap[m]; break; }
+    }
+    if (mIdx === null) return null;
+
+    const yearMatch = sheetName.match(/\d+/);
+    if (!yearMatch) return null;
+
+    let yearBE = parseInt(yearMatch[0], 10);
+    if (yearBE < 100) yearBE = 2500 + yearBE;
+
+    const yearCE = yearBE - 543;
+    const d = new Date(yearCE, mIdx, 1);
+    d.setHours(0,0,0,0);
+    return d;
+  }
+
+  function pickLatestSheet(names) {
+    if (!Array.isArray(names) || names.length === 0) return "";
+    const sorted = [...names].sort((a, b) => {
+      const da = sheetNameToDate(a);
+      const db = sheetNameToDate(b);
+
+      if (!da && !db) return String(a).localeCompare(String(b));
+      if (!da) return 1;
+      if (!db) return -1;
+      return db - da;
+    });
+    return sorted[0];
+  }
+
+  // ================== LOS preview (form only) ==================
   function getMonthStartFromSheet() {
     const months = ["มกรา","กุมภา","มีนา","เมษา","พฤษภา","มิถุนา","กรกฎา","สิงหา","กันยา","ตุลา","พฤศจิกา","ธันวา"];
     let mIdx = -1;
     months.forEach((m, i) => { if (currentSheet.includes(m)) mIdx = i; });
+    if (mIdx === -1) {
+      const full = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+      full.forEach((m, i) => { if (currentSheet.includes(m)) mIdx = i; });
+    }
     if (mIdx === -1) return null;
 
     const yearMatch = currentSheet.match(/\d+/);
-    let year = yearMatch ? (parseInt(yearMatch[0],10) < 100 ? 2000 + parseInt(yearMatch[0],10) - 43 : parseInt(yearMatch[0],10) - 543) : (new Date().getFullYear());
+    let year = yearMatch ? parseInt(yearMatch[0],10) : (new Date().getFullYear()+543);
+    if (year < 100) year = 2500 + year;
+    year = year - 543;
+
     const d = new Date(year, mIdx, 1);
     d.setHours(0,0,0,0);
     return d;
@@ -461,7 +559,6 @@
     const start = new Date(sVal); start.setHours(0,0,0,0);
     let end = eVal ? new Date(eVal) : new Date(); end.setHours(0,0,0,0);
 
-    // ตัดยอดภายในเดือน (preview)
     const ms = monthStart;
     const me = new Date(ms.getFullYear(), ms.getMonth()+1, 0); me.setHours(0,0,0,0);
 
@@ -473,7 +570,7 @@
     document.getElementById('los').value = String(los);
   }
 
-  // ================== Charts ==================
+  // ================== Charts (dashboard) ==================
   function updateCharts(sMap, saMap) {
     if (sithiChart) sithiChart.destroy();
     if (saiChart) saiChart.destroy();
@@ -495,14 +592,24 @@
   }
 
   // ================== Summary / Render ==================
+  function isCarryRow(x){
+    const st = (x.patientStatus || x.rawData?.[0] || "").trim();
+    return st === "ยอดยกมา";
+  }
+  function isNewThisMonthRow(x){
+    const st = (x.patientStatus || x.rawData?.[0] || "").trim();
+    return st === "รับใหม่" || st === "รับย้าย" || st === "รับ Refer";
+  }
+
   function updateSummary(all){
-    const carry = all.filter(x => (x.patientStatus || x.rawData?.[0]) === 'ยอดยกมา').length;
-    const nnew  = all.filter(x => (x.patientStatus || x.rawData?.[0]) === 'รับใหม่').length;
+    const carryCount = all.filter(isCarryRow).length;
+    const newCount   = all.filter(isNewThisMonthRow).length;
+
     const active = all.filter(x => x.status === 'ยังรักษาอยู่').length;
     const dc = all.filter(x => x.status === 'จำหน่ายแล้ว').length;
 
-    document.getElementById('sumCarry').innerText = carry;
-    document.getElementById('sumNew').innerText = nnew;
+    document.getElementById('sumCarry').innerText = carryCount;
+    document.getElementById('sumNew').innerText = newCount;
     document.getElementById('sumTotal').innerText = all.length;
 
     document.getElementById('sumActive').innerText = active;
@@ -511,15 +618,23 @@
   }
 
   function buildRowHtml(item){
-    const r = item.rawData;
-    const type = item.patientStatus || r[0] || '';
-    const typeBadge =
-      type === 'ยอดยกมา' ? 'bg-secondary' :
-      type === 'รับใหม่' ? 'bg-primary' : 'bg-info text-dark';
+    const r = item.rawData || [];
+    const type = (item.patientStatus || r[0] || '').trim();
+
+    const badgeMap = {
+      "ยอดยกมา": "bg-secondary",
+      "รับใหม่": "bg-primary",
+      "รับย้าย": "bg-dark",
+      "รับ Refer": "bg-info text-dark"
+    };
+    const typeBadge = badgeMap[type] || "bg-light text-dark";
 
     const statusBadge = item.status === 'จำหน่ายแล้ว' ? 'bg-success' : 'bg-warning text-dark';
+
     const losVal = parseInt(item.displayLOS, 10);
-    const losCell = (!isNaN(losVal) && losVal >= 30) ? `<span class="long-stay">${item.displayLOS}</span>` : `${item.displayLOS ?? ''}`;
+    const losCell = (!isNaN(losVal) && losVal >= 30)
+      ? `<span class="long-stay">${item.displayLOS}</span>`
+      : `${item.displayLOS ?? ''}`;
 
     return `
       <tr>
@@ -541,8 +656,8 @@
   }
 
   function renderTables(){
-    const carry = lastData.filter(x => (x.patientStatus || x.rawData?.[0]) === 'ยอดยกมา');
-    const nnew  = lastData.filter(x => (x.patientStatus || x.rawData?.[0]) === 'รับใหม่');
+    const carry = lastData.filter(isCarryRow);
+    const nnew  = lastData.filter(isNewThisMonthRow);
 
     document.getElementById('carryCount').innerText = carry.length;
     document.getElementById('newCount').innerText = nnew.length;
@@ -563,17 +678,18 @@
          </div>
          <div class="text-end">
            <div class="subtle">D/C</div>
-           <div style="font-size:20px;font-weight:800">${dcAll}</div>
+           <div style="font-size:20px;font-weight:900">${dcAll}</div>
            <div class="subtle mt-1">รวมทั้งหมด: <b>${lastData.length}</b></div>
          </div>
        </div>`;
 
-    // Charts (ภาพรวม)
     const sMap = {}, saMap = {};
     lastData.forEach(item => {
-      const r = item.rawData;
-      sMap[r[17]] = (sMap[r[17]] || 0) + 1;
-      saMap[r[16]] = (saMap[r[16]] || 0) + 1;
+      const r = item.rawData || [];
+      const sithi = r[17] || "ไม่ระบุ";
+      const sai = r[16] || "ไม่ระบุ";
+      sMap[sithi] = (sMap[sithi] || 0) + 1;
+      saMap[sai] = (saMap[sai] || 0) + 1;
     });
     updateCharts(sMap, saMap);
 
@@ -595,14 +711,14 @@
     let filtered = lastData;
 
     if(type === 'CARRY'){
-      filtered = lastData.filter(x => (x.patientStatus || x.rawData?.[0]) === 'ยอดยกมา');
+      filtered = lastData.filter(isCarryRow);
     } else if(type === 'NEW'){
-      filtered = lastData.filter(x => (x.patientStatus || x.rawData?.[0]) === 'รับใหม่');
+      filtered = lastData.filter(isNewThisMonthRow);
     }
 
     const headers = ['ประเภท','ลำดับ','HN','ชื่อ-สกุล','แผนก','LOS','สถานะ'];
     const rows = filtered.map(x => {
-      const r = x.rawData;
+      const r = x.rawData || [];
       return [x.patientStatus || r[0] || '', r[1] || '', r[13] || '', r[11] || '', r[15] || '', x.displayLOS ?? '', x.status || ''];
     });
 
@@ -625,6 +741,7 @@
   // ================== Load / Init ==================
   document.addEventListener("DOMContentLoaded", () => {
     initSheets();
+
     callApi('getDropdownData').then(d => {
       fillSelect('ward', d.ward);
       fillSelect('sithi', d.sithi);
@@ -659,7 +776,9 @@
     btn.classList.remove('btn-warning');
     btn.classList.add('btn-danger');
 
-    currentSheet = names[0];
+    currentSheet = pickLatestSheet(names);
+    selector.value = currentSheet;
+
     loadDashboard();
   }
 
@@ -674,11 +793,7 @@
     callApi('getAllData', currentSheet).then(data => {
       lastData = Array.isArray(data) ? data : [];
       updateSummary(lastData);
-
-      // สถานะชีท: ถ้ามีคนที่ LOS เท่ากับวันสิ้นเดือนจำนวนมาก? (ไม่ชัวร์)
-      // จึงแสดงแบบกลาง ๆ
       document.getElementById('sheetStatusChip').innerText = 'โหลดแล้ว';
-
       renderTables();
       Swal.close();
     }).catch(err => {
@@ -686,74 +801,230 @@
     });
   }
 
-  // ================== Report ==================
+  // ================== Report (PRO) ==================
+  function destroyReportCharts(){
+    if (repChartIn) repChartIn.destroy();
+    if (repChartOut) repChartOut.destroy();
+    if (repChartLOS) repChartLOS.destroy();
+    repChartIn = repChartOut = repChartLOS = null;
+  }
+
+  function buildReportSkeleton(monthTitle){
+    return `
+      <div class="report-note mb-2">
+        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-start">
+          <div>
+            <div class="fw-black">นิยาม (สำหรับ HA/Accreditation)</div>
+            <div>• Patient Days = ผลรวม LOS ที่ตัดยอดภายในเดือน</div>
+            <div>• ALOS(จำหน่าย) = Patient Days / Separations</div>
+            <div>• ALOS(รับเข้า) = Patient Days / Admissions</div>
+            <div class="text-danger">• BOR ต้องใช้ “เตียงรวม” (พักไว้ก่อน)</div>
+          </div>
+          <div class="text-end">
+            <span class="pill">เดือน: <b>${monthTitle}</b></span>
+            <span class="pill">ออกรายงาน: <b>${new Date().toLocaleString('th-TH')}</b></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-2">
+        <!-- KPI -->
+        <div class="col-12">
+          <div class="row g-2">
+            <div class="col-6 col-lg-3"><div class="kpi-card">
+              <div class="kpi-label">ยอดยกมา (BOB)</div>
+              <div class="kpi-value text-secondary" id="kpiCarry">0</div>
+              <div class="kpi-sub">ผู้ป่วยค้างจากเดือนก่อน</div>
+            </div></div>
+
+            <div class="col-6 col-lg-3"><div class="kpi-card">
+              <div class="kpi-label">รับเข้าในเดือน (Admissions)</div>
+              <div class="kpi-value text-primary" id="kpiInTotal">0</div>
+              <div class="kpi-sub">ใหม่ <b id="kpiInNew">0</b> | ย้าย <b id="kpiInTransfer">0</b> | Refer <b id="kpiInRefer">0</b></div>
+            </div></div>
+
+            <div class="col-6 col-lg-3"><div class="kpi-card">
+              <div class="kpi-label">จำหน่ายทั้งหมด (Separations)</div>
+              <div class="kpi-value text-success" id="kpiOutTotal">0</div>
+              <div class="kpi-sub">D/C <b id="kpiOutDC">0</b> | ย้าย <b id="kpiOutTO">0</b> | ReferOut <b id="kpiOutRO">0</b> | ตาย <b id="kpiOutDeath">0</b></div>
+            </div></div>
+
+            <div class="col-6 col-lg-3"><div class="kpi-card">
+              <div class="kpi-label">คงเหลือสิ้นเดือน (EOM Census)</div>
+              <div class="kpi-value text-dark" id="kpiEOM">0</div>
+              <div class="kpi-sub">ผู้ป่วยที่ยังรักษาอยู่</div>
+            </div></div>
+
+            <div class="col-6 col-lg-3"><div class="kpi-card">
+              <div class="kpi-label">Patient Days (วันนอนรวม)</div>
+              <div class="kpi-value text-dark" id="kpiPatientDays">0</div>
+              <div class="kpi-sub">รวม LOS ที่ตัดยอดในเดือน</div>
+            </div></div>
+
+            <div class="col-6 col-lg-3"><div class="kpi-card">
+              <div class="kpi-label">ALOS (จำหน่าย)</div>
+              <div class="kpi-value text-dark" id="kpiALOSOut">0.00</div>
+              <div class="kpi-sub">PatientDays / Separations</div>
+            </div></div>
+
+            <div class="col-6 col-lg-3"><div class="kpi-card">
+              <div class="kpi-label">ALOS (รับเข้า)</div>
+              <div class="kpi-value text-dark" id="kpiALOSIn">0.00</div>
+              <div class="kpi-sub">PatientDays / Admissions</div>
+            </div></div>
+
+            <div class="col-6 col-lg-3"><div class="kpi-card">
+              <div class="kpi-label">BOR (%)</div>
+              <div class="kpi-value text-muted">-</div>
+              <div class="kpi-sub">พักไว้ก่อน (ต้องมีเตียงรวม)</div>
+            </div></div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="col-12 col-lg-4">
+          <div class="report-block">
+            <div class="fw-black mb-2">Admissions by Type</div>
+            <canvas id="repChartIn" style="max-height:220px;"></canvas>
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+          <div class="report-block">
+            <div class="fw-black mb-2">Outcome Mix</div>
+            <canvas id="repChartOut" style="max-height:220px;"></canvas>
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+          <div class="report-block">
+            <div class="fw-black mb-2">LOS Distribution</div>
+            <canvas id="repChartLOS" style="max-height:220px;"></canvas>
+          </div>
+        </div>
+
+        <!-- Long stay -->
+        <div class="col-12">
+          <div class="report-block">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="fw-black">Long-stay (≥30 วัน)</div>
+              <span class="badge bg-danger" id="kpiLongStay">0 ราย</span>
+            </div>
+            <div class="subtle mt-1">ใช้ติดตามเคสค้างเตียง/วางแผนจำหน่าย (แสดงสูงสุด 50 ราย)</div>
+            <div class="mt-2" id="longStayList" style="max-height:200px; overflow:auto;"></div>
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
   function showFullReport() {
-    Swal.fire({ title: 'คำนวณสรุปรวม...', didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'คำนวณรายงานสรุป...', didOpen: () => Swal.showLoading() });
 
     callApi('getAllData', currentSheet).then(patients => {
       patients = Array.isArray(patients) ? patients : [];
       document.getElementById('reportMonthTitle').innerText = currentSheet;
 
-      let s = {
-        carry: {M:0,F:0},
-        newI: {M:0,F:0},
-        out: { dc:{M:0,F:0}, tra:{M:0,F:0}, abs:{M:0,F:0}, refu:{M:0,F:0}, refO:{M:0,F:0}, death:{M:0,F:0} },
-        los: { M:0, F:0, Mc:0, Fc:0 }
-      };
+      // render skeleton first
+      destroyReportCharts();
+      document.getElementById('reportResult').innerHTML = buildReportSkeleton(currentSheet);
 
-      patients.forEach(item => {
-        const r = item.rawData;
-        const gx = r[33] === 'หญิง' ? 'F' : 'M';
-        const type = item.patientStatus || r[0];
+      // ===== Compute counts =====
+      const typeOf = (item) => ((item.patientStatus || item.rawData?.[0] || "").trim());
 
-        if (type === 'ยอดยกมา') s.carry[gx]++; else s.newI[gx]++;
+      const carry = patients.filter(x => typeOf(x) === "ยอดยกมา").length;
+      const inNew = patients.filter(x => typeOf(x) === "รับใหม่").length;
+      const inTransfer = patients.filter(x => typeOf(x) === "รับย้าย").length;
+      const inRefer = patients.filter(x => typeOf(x) === "รับ Refer").length;
+      const inTotal = inNew + inTransfer + inRefer;
 
-        if(r[20]) s.out.dc[gx]++;
-        if(r[24]) s.out.tra[gx]++;
-        if(r[26]) s.out.abs[gx]++;
-        if(r[27]) s.out.refu[gx]++;
-        if(r[28]) s.out.refO[gx]++;
-        if(r[30]) s.out.death[gx]++;
+      const outDC    = patients.filter(x => x.rawData?.[20]).length;
+      const outTO    = patients.filter(x => x.rawData?.[25]).length;
+      const outAbs   = patients.filter(x => x.rawData?.[26]).length;
+      const outRefu  = patients.filter(x => x.rawData?.[27]).length;
+      const outRO    = patients.filter(x => x.rawData?.[28]).length;
+      const outDeath = patients.filter(x => x.rawData?.[30]).length;
+      const outTotal = outDC + outTO + outAbs + outRefu + outRO + outDeath;
 
-        s.los[gx] += parseInt(item.displayLOS,10) || 0;
-        s.los[gx+'c']++;
+      const eom = patients.filter(x => x.status === "ยังรักษาอยู่").length;
+
+      const patientDays = patients.reduce((s, x) => s + (safeInt(x.displayLOS)), 0);
+
+      const alosOut = (outTotal > 0) ? (patientDays / outTotal) : 0;
+      const alosIn  = (inTotal > 0) ? (patientDays / inTotal) : 0;
+
+      const longStay = patients
+        .filter(x => safeInt(x.displayLOS) >= 30)
+        .sort((a,b)=> safeInt(b.displayLOS) - safeInt(a.displayLOS));
+
+      // ===== Fill KPI =====
+      document.getElementById('kpiCarry').innerText = carry;
+      document.getElementById('kpiInTotal').innerText = inTotal;
+      document.getElementById('kpiInNew').innerText = inNew;
+      document.getElementById('kpiInTransfer').innerText = inTransfer;
+      document.getElementById('kpiInRefer').innerText = inRefer;
+
+      document.getElementById('kpiOutTotal').innerText = outTotal;
+      document.getElementById('kpiOutDC').innerText = outDC;
+      document.getElementById('kpiOutTO').innerText = outTO;
+      document.getElementById('kpiOutRO').innerText = outRO;
+      document.getElementById('kpiOutDeath').innerText = outDeath;
+
+      document.getElementById('kpiEOM').innerText = eom;
+      document.getElementById('kpiPatientDays').innerText = patientDays;
+      document.getElementById('kpiALOSOut').innerText = alosOut.toFixed(2);
+      document.getElementById('kpiALOSIn').innerText = alosIn.toFixed(2);
+
+      document.getElementById('kpiLongStay').innerText = `${longStay.length} ราย`;
+      document.getElementById('longStayList').innerHTML = longStay.slice(0,50).map(x => {
+        const r = x.rawData || [];
+        return `
+          <div class="d-flex justify-content-between border-bottom py-2">
+            <div>
+              <div class="fw-bold">${r[11] || '-'}</div>
+              <div class="subtle">HN ${r[13]||'-'} | Ward ${r[15]||'-'} | สิทธิ ${r[17]||'-'} | สาย ${r[16]||'-'}</div>
+            </div>
+            <div class="text-danger fw-black" style="font-size:18px">${safeInt(x.displayLOS)}</div>
+          </div>
+        `;
+      }).join('') || `<div class="text-muted">ไม่มี</div>`;
+
+      // ===== Charts =====
+      repChartIn = new Chart(document.getElementById('repChartIn'), {
+        type: 'doughnut',
+        data: {
+          labels: ['รับใหม่','รับย้าย','รับ Refer'],
+          datasets: [{ data: [inNew, inTransfer, inRefer] }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
       });
 
-      let tL = s.los.M + s.los.F;
-      let avg = (tL / ((s.los.Mc + s.los.Fc) || 1)).toFixed(2);
+      repChartOut = new Chart(document.getElementById('repChartOut'), {
+        type: 'doughnut',
+        data: {
+          labels: ['D/C','ย้ายออก','หนี','ปฏิเสธ','Refer Out','เสียชีวิต'],
+          datasets: [{ data: [outDC, outTO, outAbs, outRefu, outRO, outDeath] }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+      });
 
-      document.getElementById('reportResult').innerHTML = `
-        <div class="row g-2">
-          <div class="col-md-6">
-            <h6 class="fw-bold">1) จำนวนผู้ป่วยสะสม</h6>
-            <table class="table table-sm border small">
-              <tr><th>กลุ่ม</th><th>ชาย</th><th>หญิง</th><th>รวม</th></tr>
-              <tr><td>ยกมา</td><td>${s.carry.M}</td><td>${s.carry.F}</td><td>${s.carry.M+s.carry.F}</td></tr>
-              <tr><td>รับใหม่</td><td>${s.newI.M}</td><td>${s.newI.F}</td><td>${s.newI.M+s.newI.F}</td></tr>
-              <tr class="table-primary fw-bold"><td>รวมดูแล</td><td>${s.carry.M+s.newI.M}</td><td>${s.carry.F+s.newI.F}</td><td>${s.carry.M+s.newI.M+s.carry.F+s.newI.F}</td></tr>
-            </table>
-          </div>
+      const losBuckets = { "0":0, "1-3":0, "4-7":0, "8-14":0, "15-29":0, "30+":0 };
+      patients.forEach(x => {
+        const v = safeInt(x.displayLOS);
+        if (v === 0) losBuckets["0"]++;
+        else if (v <= 3) losBuckets["1-3"]++;
+        else if (v <= 7) losBuckets["4-7"]++;
+        else if (v <= 14) losBuckets["8-14"]++;
+        else if (v <= 29) losBuckets["15-29"]++;
+        else losBuckets["30+"]++;
+      });
 
-          <div class="col-md-6">
-            <h6 class="fw-bold">2) การจำหน่าย (Outcome)</h6>
-            <table class="table table-sm border small">
-              <tr><th>เหตุ</th><th>ชาย</th><th>หญิง</th><th>รวม</th></tr>
-              <tr><td>D/C</td><td>${s.out.dc.M}</td><td>${s.out.dc.F}</td><td>${s.out.dc.M+s.out.dc.F}</td></tr>
-              <tr><td>ย้าย</td><td>${s.out.tra.M}</td><td>${s.out.tra.F}</td><td>${s.out.tra.M+s.out.tra.F}</td></tr>
-              <tr><td>หนี</td><td>${s.out.abs.M}</td><td>${s.out.abs.F}</td><td>${s.out.abs.M+s.out.abs.F}</td></tr>
-              <tr><td>ปฏิเสธ</td><td>${s.out.refu.M}</td><td>${s.out.refu.F}</td><td>${s.out.refu.M+s.out.refu.F}</td></tr>
-              <tr><td>Refer Out</td><td>${s.out.refO.M}</td><td>${s.out.refO.F}</td><td>${s.out.refO.M+s.out.refO.F}</td></tr>
-              <tr class="table-danger"><td>เสียชีวิต</td><td>${s.out.death.M}</td><td>${s.out.death.F}</td><td>${s.out.death.M+s.out.death.F}</td></tr>
-            </table>
-          </div>
-
-          <div class="col-12">
-            <div class="p-3 bg-white border rounded text-success text-center fw-bold">
-              3) วันนอนรวมเดือนนี้: ${tL} วัน | AVG LOS: ${avg} วัน/ราย
-            </div>
-          </div>
-        </div>
-      `;
+      repChartLOS = new Chart(document.getElementById('repChartLOS'), {
+        type:'bar',
+        data:{ labels:Object.keys(losBuckets), datasets:[{ data:Object.values(losBuckets), borderRadius: 8 }] },
+        options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } }
+      });
 
       Swal.close();
       new bootstrap.Modal(document.getElementById('reportModal')).show();
@@ -762,7 +1033,7 @@
 
   // ================== Edit / PDF ==================
   function editPatient(item) {
-    const r = item.rawData;
+    const r = item.rawData || [];
 
     document.getElementById('rowId').value = item.rowId;
     document.getElementById('seq').value = r[1] || "";
@@ -797,6 +1068,7 @@
     document.getElementById('dx2').value = r[19] || "";
 
     document.getElementById('dcDate').value = formatDateForInput(r[20]);
+    document.getElementById('fu').value = r[21] || "";
     document.getElementById('admitUnder6').value = r[22] || "";
     document.getElementById('deathDate').value = formatDateForInput(r[30]);
     document.getElementById('transferOutDate').value = formatDateForInput(r[25]);
@@ -812,14 +1084,13 @@
     else if(r[8]) document.getElementById('inType').value = "รับ Refer";
 
     calculateLOSPreview();
-
     new bootstrap.Tab(document.querySelector('button[data-bs-target="#form-pane"]')).show();
     window.scrollTo(0,0);
   }
 
   function printPDF(item) {
     const win = window.open("", "_blank");
-    const r = item.rawData;
+    const r = item.rawData || [];
 
     const p = {
       prefix:r[32], patientName:r[11], hn:r[13], an:r[14], gender:r[33], age:r[12],
@@ -840,10 +1111,14 @@
     e.preventDefault();
     Swal.fire({ title: 'บันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
+    const inT = document.getElementById('inType').value;
+    const existingStatus = (document.getElementById('patientStatusStored').value || "").trim();
+    const statusToSave = (existingStatus === "ยอดยกมา") ? "ยอดยกมา" : inT;
+
     const formData = {
       rowId: document.getElementById('rowId').value,
       seq: document.getElementById('seq').value,
-      patientStatus: document.getElementById('patientStatusStored').value || "รับใหม่",
+      patientStatus: statusToSave,
 
       prefix: document.getElementById('prefix').value,
       patientName: document.getElementById('patientName').value,
@@ -860,6 +1135,7 @@
       address: document.getElementById('address').value,
 
       los: document.getElementById('los').value,
+      fu: document.getElementById('fu').value,
       admitUnder6: document.getElementById('admitUnder6').value,
 
       dcDate: formatDateForSheet(document.getElementById('dcDate').value),
@@ -874,7 +1150,6 @@
 
     const iD = formatDateForSheet(document.getElementById('inDate').value);
     const iT = document.getElementById('inTime').value;
-    const inT = document.getElementById('inType').value;
     const iDep = document.getElementById('inDept').value;
 
     if(inT === "รับใหม่"){
@@ -898,7 +1173,8 @@
   function prepareNewForm(){
     document.getElementById('dataForm').reset();
     document.getElementById('rowId').value = "";
-    document.getElementById('patientStatusStored').value = "รับใหม่";
+    document.getElementById('patientStatusStored').value = "";
+    document.getElementById('inType').value = "รับใหม่";
 
     callApi('getNextSeq', currentSheet).then(s => {
       document.getElementById('seq').value = s;
