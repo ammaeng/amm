@@ -1181,8 +1181,7 @@ document.getElementById('kpiOutRefu').innerText = outRefu;
       
       Swal.close();
 
-lastTriggerEl = document.activeElement; // เก็บ element ที่กด/โฟกัสอยู่
-document.activeElement?.blur();         // กัน focus ค้างใน element ที่จะถูก aria-hidden
+
 
 const modalEl = document.getElementById('reportModal');
 bootstrap.Modal.getOrCreateInstance(modalEl).show();
