@@ -1193,7 +1193,7 @@
   }
 
 
-  async function showFullReport() {
+async function showFullReport() {
     Swal.fire({ title: 'คำนวณรายงานสรุป...', didOpen: () => Swal.showLoading() });
 
     try {
@@ -1206,27 +1206,68 @@
       destroyReportCharts();
       document.getElementById('reportResult').innerHTML = buildReportSkeleton(currentSheet);
 
-      // --- ส่วนแสดงผล BOR จาก Snapshot ---
+      // 1. แสดงผล BOR จาก Snapshot
       if (summary) {
         const borEl = document.getElementById('kpiBOR');
-        borEl.innerText = summary.bor + '%';
-        borEl.className = 'kpi-value ' + (summary.bor > 90 ? 'text-danger' : (summary.bor > 70 ? 'text-success' : 'text-primary'));
-        document.getElementById('kpiBedsSub').innerHTML = `จากจำนวนเตียง <b>${summary.beds}</b> เตียง`;
+        if(borEl) {
+          borEl.innerText = summary.bor + '%';
+          borEl.className = 'kpi-value ' + (summary.bor > 90 ? 'text-danger' : (summary.bor > 70 ? 'text-success' : 'text-primary'));
+          document.getElementById('kpiBedsSub').innerHTML = `จากจำนวนเตียง <b>${summary.beds}</b> เตียง`;
+        }
       }
 
-const typeOf = (item) => ((item.patientStatus || item.rawData?.[0] || "").trim());
+      // 2. คำนวณ KPI ที่เหลือ
+      const typeOf = (item) => ((item.patientStatus || item.rawData?.[0] || "").trim());
       const carry = patients.filter(x => typeOf(x) === "ยอดยกมา").length;
       const inNew = patients.filter(x => typeOf(x) === "รับใหม่").length;
       const inTransfer = patients.filter(x => typeOf(x) === "รับย้าย").length;
       const inRefer = patients.filter(x => typeOf(x) === "รับ Refer").length;
-      const inTotal = inNew + inTransfer + inRefer;      // ปิดท้ายด้วย
+      const inTotal = inNew + inTransfer + inRefer;
+
+      const outDC    = patients.filter(x => x.rawData?.[20]).length;
+      const outTO    = patients.filter(x => x.rawData?.[25]).length;
+      const outAbs   = patients.filter(x => x.rawData?.[26]).length;
+      const outRefu  = patients.filter(x => x.rawData?.[27]).length;
+      const outRO    = patients.filter(x => x.rawData?.[28]).length;
+      const outDeath = patients.filter(x => x.rawData?.[30]).length;
+      const outTotal = outDC + outTO + outAbs + outRefu + outRO + outDeath;
+      const eom = patients.filter(x => x.status === "ยังรักษาอยู่").length;
+      const patientDays = patients.reduce((s, x) => s + (safeInt(x.displayLOS)), 0);
+
+      // 3. แสดงผลตัวเลข KPI
+      document.getElementById('kpiCarry').innerText = carry;
+      document.getElementById('kpiInTotal').innerText = inTotal;
+      document.getElementById('kpiInNew').innerText = inNew;
+      document.getElementById('kpiInTransfer').innerText = inTransfer;
+      document.getElementById('kpiInRefer').innerText = inRefer;
+      document.getElementById('kpiOutTotal').innerText = outTotal;
+      document.getElementById('kpiOutDC').innerText = outDC;
+      document.getElementById('kpiOutTO').innerText = outTO;
+      document.getElementById('kpiOutRO').innerText = outRO;
+      document.getElementById('kpiOutDeath').innerText = outDeath;
+      document.getElementById('kpiEOM').innerText = eom;
+      document.getElementById('kpiPatientDays').innerText = patientDays;
+      document.getElementById('kpiALOSOut').innerText = (outTotal > 0) ? (patientDays / outTotal).toFixed(2) : "0.00";
+      document.getElementById('kpiALOSIn').innerText = (inTotal > 0) ? (patientDays / inTotal).toFixed(2) : "0.00";
+
+      // 4. วาดกราฟ
+      repChartIn = new Chart(document.getElementById('repChartIn'), {
+        type: 'doughnut',
+        data: { labels: ['รับใหม่','รับย้าย','รับ Refer'], datasets: [{ data: [inNew, inTransfer, inRefer] }] },
+        options: { plugins: { legend: { position: 'bottom' } } }
+      });
+      repChartOut = new Chart(document.getElementById('repChartOut'), {
+        type: 'doughnut',
+        data: { labels: ['D/C','ย้ายออก','หนี','ปฏิเสธ','Refer Out','เสียชีวิต'], datasets: [{ data: [outDC, outTO, outAbs, outRefu, outRO, outDeath] }] },
+        options: { plugins: { legend: { position: 'bottom' } } }
+      });
+      
       Swal.close();
       new bootstrap.Modal(document.getElementById('reportModal')).show();
     } catch(err) {
       Swal.fire('ผิดพลาด', err.toString(), 'error');
     }
   }
-
   // ปรับแก้ปุ่มปิดเดือนให้รับค่าเตียง
   async function closeMonthUI() {
     const { value: bedCount } = await Swal.fire({
