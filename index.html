@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>ระบบทะเบียนผู้ป่วย Cloud V.Ultimate - Hospital Grade (Ward เดียว)</title>
+  <meta charset="UTF-8" />
+  <title>ระบบทะเบียนผู้ป่วย Cloud (Hospital Grade)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -22,7 +22,6 @@
   <style>
     * { font-family: 'Sarabun', sans-serif !important; }
     body { background: #f4f7f6; color: #263238; }
-
     .card { border: 0; border-radius: 16px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
     .top-title { font-weight: 900; letter-spacing: 0.2px; }
     .chip { padding: 6px 10px; border-radius: 999px; font-size: 12px; }
@@ -35,55 +34,12 @@
     .long-stay { color:#dc3545; font-weight:900; }
     .bg-grad { background: linear-gradient(135deg, #0d6efd, #00bcd4); color: white; }
     .sticky-actions { position: sticky; bottom: 12px; z-index: 2; }
-
-    /* ===== Report Pro UI ===== */
-    .kpi-card{
-      background:#fff;
-      border:1px solid rgba(0,0,0,.08);
-      border-radius:14px;
-      padding:14px;
-      height:100%;
-      min-width: 220px; /* กันบีบจนคำแตก */
-    }
-    .kpi-label{ color:#6c757d; font-size:12px; }
-    .kpi-value{ font-size:30px; font-weight:900; line-height:1.1; margin-top:4px; }
-    .kpi-sub{ font-size:12px; color:#6c757d; margin-top:6px; }
-    .report-note{
-      background:#f8f9fa;
-      border:1px dashed rgba(0,0,0,.15);
-      border-radius:12px;
-      padding:10px 12px;
-      font-size:12px;
-      color:#546e7a;
-    }
-    .report-block{
-      background:#fff;
-      border:1px solid rgba(0,0,0,.08);
-      border-radius:14px;
-      padding:14px;
-    }
-    .fw-black{ font-weight:900; }
-    .pill{
-      display:inline-flex;
-      gap:6px;
-      align-items:center;
-      padding:4px 10px;
-      border-radius:999px;
-      border:1px solid rgba(0,0,0,.10);
-      font-size:12px;
-      color:#37474f;
-      background:#fff;
-    }
-
-    /* กัน modal มี scroll แนวนอน */
-    .modal-body{ overflow-x: hidden; }
   </style>
 </head>
 
 <body>
 <div class="container-fluid p-2 p-md-4">
 
-  <!-- Top Bar -->
   <div class="card p-3 mb-3 bg-grad">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
       <div>
@@ -98,7 +54,6 @@
     </div>
   </div>
 
-  <!-- Summary -->
   <div class="row g-2 mb-3">
     <div class="col-12 col-lg-8">
       <div class="card p-3">
@@ -129,12 +84,11 @@
           <span class="chip bg-light border"><b>Active:</b> <span id="sumActive">0</span></span>
           <span class="chip bg-light border"><b>D/C:</b> <span id="sumDC">0</span></span>
           <span class="chip bg-light border"><b>แถวทั้งหมด:</b> <span id="sumRows">0</span></span>
-
           <button class="btn btn-sm btn-outline-dark ms-auto" onclick="exportCSV('ALL')">Export CSV (ทั้งหมด)</button>
         </div>
 
         <div class="subtle mt-2">
-          * LOS แสดงแบบมาตรฐานเวชระเบียน: เดือนที่ยังเปิดจะคิดถึง “วันนี้”; เดือนที่ปิดแล้วจะคิดถึง “สิ้นเดือน”
+          * LOS: เดือนปัจจุบันคิดถึง “วันนี้”; เดือนที่ผ่านมา/ปิดแล้วคิดถึง “สิ้นเดือน”
         </div>
       </div>
     </div>
@@ -150,7 +104,6 @@
     </div>
   </div>
 
-  <!-- Charts -->
   <div class="row g-2 mb-3">
     <div class="col-12 col-lg-6">
       <div class="card p-3">
@@ -164,7 +117,6 @@
     </div>
   </div>
 
-  <!-- Tabs -->
   <ul class="nav nav-pills nav-fill mb-3 bg-white p-1 rounded-pill shadow-sm" id="mainTab">
     <li class="nav-item">
       <button class="nav-link active rounded-pill" data-bs-toggle="tab" data-bs-target="#list-pane" onclick="loadDashboard()">แดชบอร์ด</button>
@@ -176,7 +128,6 @@
 
   <div class="tab-content">
 
-    <!-- LIST PANE -->
     <div class="tab-pane fade show active" id="list-pane">
       <div class="card p-3 mb-3">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -186,7 +137,7 @@
             <button class="btn btn-sm btn-outline-dark" onclick="exportCSV('CARRY')">Export CSV</button>
           </div>
         </div>
-        <div class="subtle mb-2">หมายเหตุ: เป็นผู้ป่วยค้างจากเดือนก่อน (ยังไม่จำหน่าย ณ สิ้นเดือน)</div>
+        <div class="subtle mb-2">หมายเหตุ: ผู้ป่วยค้างจากเดือนก่อน (ยังไม่จำหน่าย ณ สิ้นเดือน)</div>
 
         <table id="carryTable" class="table table-hover w-100 dt-responsive nowrap">
           <thead class="table-light">
@@ -206,7 +157,7 @@
             <button class="btn btn-sm btn-outline-dark" onclick="exportCSV('NEW')">Export CSV</button>
           </div>
         </div>
-        <div class="subtle mb-2">หมายเหตุ: เป็นผู้ป่วยที่รับเข้าในเดือนนี้</div>
+        <div class="subtle mb-2">หมายเหตุ: ผู้ป่วยที่รับเข้าในเดือนนี้</div>
 
         <table id="newTable" class="table table-hover w-100 dt-responsive nowrap">
           <thead class="table-light">
@@ -219,7 +170,6 @@
       </div>
     </div>
 
-    <!-- FORM PANE -->
     <div class="tab-pane fade" id="form-pane">
       <form id="dataForm">
         <input type="hidden" id="rowId">
@@ -228,7 +178,7 @@
         <div class="card mb-3">
           <div class="p-3 border-bottom">
             <div class="section-title">1) การรับเข้า</div>
-            <div class="subtle">บันทึกวันที่รับเข้า/ประเภทการรับ เพื่อคำนวณ LOS และรายงานได้ถูกต้อง</div>
+            <div class="subtle">บันทึกวันที่รับเข้า/ประเภทการรับ เพื่อคำนวณ LOS</div>
           </div>
           <div class="p-3 row g-2">
             <div class="col-4 col-md-2">
@@ -261,7 +211,6 @@
         <div class="card mb-3">
           <div class="p-3 border-bottom">
             <div class="section-title">2) ข้อมูลผู้ป่วย</div>
-            <div class="subtle">กรอกข้อมูลพื้นฐานให้ครบเพื่อค้นหา/พิมพ์ PDF</div>
           </div>
           <div class="p-3 row g-2">
             <div class="col-12 col-md-6">
@@ -339,7 +288,6 @@
         <div class="card mb-3">
           <div class="p-3 border-bottom">
             <div class="section-title">3) จำหน่าย / Outcome</div>
-            <div class="subtle">กรอกวันที่เหตุการณ์ (D/C / ย้าย / หนี / ปฏิเสธ / Refer / ตาย) เพื่อปิดเคส</div>
           </div>
           <div class="p-3 row g-2">
             <div class="col-6 col-md-3">
@@ -348,14 +296,14 @@
             </div>
             <div class="col-6 col-md-3">
               <label class="form-label">F/U</label>
-              <input type="text" class="form-control" id="fu" placeholder="เช่น นัด 7 วัน / OPD / โทรติดตาม">
+              <input type="text" class="form-control" id="fu">
             </div>
             <div class="col-6 col-md-3">
               <label class="form-label">LOS (Preview)</label>
               <input type="text" class="form-control text-center fw-bold" id="los" readonly>
             </div>
             <div class="col-12 col-md-3">
-              <label class="form-label">Admit &lt; 6 ชม.</label>
+              <label class="form-label">Admit < 6 ชม.</label>
               <input type="text" id="admitUnder6" class="form-control" oninput="calculateLOSPreview()" placeholder="ระบุ ชม.">
             </div>
 
@@ -401,66 +349,38 @@
 
       </form>
     </div>
+
   </div>
 
-</div>
-
-<!-- Report Modal -->
-<div class="modal fade" id="reportModal" tabindex="-1">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content border-0 shadow">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title fw-bold">รายงานสรุปเดือน (Professional): <span id="reportMonthTitle"></span></h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body bg-light">
-        <div id="reportResult">กำลังโหลด...</div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <datalist id="dxList"></datalist>
 
 <script>
-  // ================== CONFIG ==================
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiZ45I4O8R3-vpxlZLcVY5YWhVkR7qe7sySnOhm7Gg_U2K_5rMZCQcYcucdSFk17g/exec";
+/* ================== CONFIG ================== */
+const SCRIPT_URL = "PUT_YOUR_WEBAPP_URL_HERE"; // <-- ใส่ URL Web App ของ Apps Script
 
-  let currentSheet = "";
-  let carryDT, newDT, sithiChart, saiChart;
+let currentSheet = "";
+let carryDT, newDT, sithiChart, saiChart;
+let lastData = [];
 
-  let lastData = [];
+/* ================== API ================== */
+async function callApi(action, data=null){
+  const r = await fetch(SCRIPT_URL, { method:'POST', body: JSON.stringify({action, data}) });
+  const res = await r.json();
+  if(res.status === 'success') return res.data;
+  throw new Error(res.message || 'API error');
+}
 
-  // Report charts instance
-  let repChartIn, repChartOut, repChartLOS;
-
-  // ================== API ==================
-  async function callApi(action, data = null) {
-    const r = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action, data }) });
-    const res = await r.json();
-    if (res.status === 'success') return res.data;
-    throw new Error(res.message);
-  }
-
-  // ================== Helpers ==================
-  function fillSelect(id, items) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.innerHTML = '<option value="">-- เลือก --</option>' + (items || []).map(i => `<option value="${i}">${i}</option>`).join('');
-  }
-
-// ===== Hospital-grade Date Parsing (Client) =====
-// ===== Hospital-grade Date Parsing (Client) =====
+/* ================== Date utils (Client) ================== */
 function normalizeThaiDigits(s){
   if(s === null || s === undefined) return "";
   return String(s).replace(/[๐-๙]/g, d => "๐๑๒๓๔๕๖๗๘๙".indexOf(d));
 }
 
-// คืนค่าเป็น "YYYY-MM-DD" (สำหรับ input[type=date]) หรือ "" ถ้าอ่านไม่ได้
 function parseAnyDateToISO(v){
   if(v === null || v === undefined) return "";
 
-  // Date object
   if(Object.prototype.toString.call(v) === "[object Date]" && !isNaN(v.getTime())){
     const y = v.getFullYear();
     const m = String(v.getMonth()+1).padStart(2,'0');
@@ -468,267 +388,157 @@ function parseAnyDateToISO(v){
     return `${y}-${m}-${d}`;
   }
 
-  // ✅ normalize เลขไทยก่อน
   let s = normalizeThaiDigits(v).trim();
   if(!s) return "";
 
   const junk = ["-", "—", "N/A", "NA", "null", "undefined", "#VALUE!", "0"];
   if(junk.includes(s)) return "";
 
-  // YYYY-MM-DD หรือ YYYY-MM-DDTHH...
   if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.substring(0,10);
 
-  // แปลงตัวคั่น
   s = s.replace(/[.\-]/g, "/").replace(/\s+/g, "");
 
-  // dd/mm/yy | dd/mm/yyyy
   let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
   if(m){
     let dd = parseInt(m[1],10);
     let mm = parseInt(m[2],10);
     let yy = parseInt(m[3],10);
 
-    if(yy < 100) yy = 2500 + yy;      // 2 หลัก -> BE
-    if(yy > 2400) yy = yy - 543;      // BE -> AD
+    if(yy < 100) yy = 2500 + yy;
+    if(yy > 2400) yy = yy - 543;
 
     const dt = new Date(yy, mm-1, dd);
     if(dt.getFullYear() !== yy || dt.getMonth() !== (mm-1) || dt.getDate() !== dd) return "";
-
     return `${yy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
   }
 
-  // dd/mm/yyyy HH:MM...
   m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4}).*$/);
   if(m) return parseAnyDateToISO(`${m[1]}/${m[2]}/${m[3]}`);
-
-  // serial เผื่อหลุดมาเป็นเลข
-  if(/^\d+(\.\d+)?$/.test(s)){
-    const n = Number(s);
-    if(n > 20000 && n < 80000){
-      const base = new Date(Date.UTC(1899, 11, 30));
-      const dt = new Date(base.getTime() + n * 86400000);
-      const y = dt.getUTCFullYear();
-      const mo = String(dt.getUTCMonth()+1).padStart(2,'0');
-      const da = String(dt.getUTCDate()).padStart(2,'0');
-      return `${y}-${mo}-${da}`;
-    }
-  }
 
   return "";
 }
 
 function formatDateForInput(v){ return parseAnyDateToISO(v); }
-
-function normalizeThaiDateString(v){
+function formatDateForSheet(v){
   const iso = parseAnyDateToISO(v);
   if(!iso) return "";
-  const [y,m,d] = iso.split('-');
-  return `${d}/${m}/${(parseInt(y,10)+543)}`; // dd/mm/BBBB
-}
-
-function formatDateForSheet(v){ return normalizeThaiDateString(v); }
-function formatDateForInput(v){
-  return parseAnyDateToISO(v);
-}
-// วางทับของเดิม: ใช้ parser ตัวเดียวจบ
-function formatDateForInput(v){
-  return parseAnyDateToISO(v);
-}
-
-// Normalize วันที่ไทยในรูป "dd/mm/BBBB" เพื่อส่งกลับชีท (ถ้าอยากใช้)
-function normalizeThaiDateString(v){
-  // รับ input "YYYY-MM-DD" → คืน "dd/mm/BBBB"
-  const iso = parseAnyDateToISO(v);
-  if(!iso) return "";
-  const [y,m,d] = iso.split('-');
+  const [y,m,d] = iso.split("-");
   return `${d}/${m}/${(parseInt(y,10)+543)}`;
 }
-function formatDateForSheet(v) {
-  // รับค่าได้ทั้ง ISO, ไทย, มีเวลา ฯลฯ แล้วทำให้เป็น dd/mm/BBBB
-  return normalizeThaiDateString(v);
+
+/* ================== Helpers ================== */
+function fillSelect(id, items){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.innerHTML = '<option value="">-- เลือก --</option>' + (items||[]).map(i=>`<option value="${i}">${i}</option>`).join('');
 }
 
-  function formatTimeForInput(v) {
-    if (!v) return "";
-    let c = v.toString().trim().replace('.',':');
-    let p = c.split(':');
-    return p.length >= 2 ? `${p[0].padStart(2,'0')}:${p[1].padStart(2,'0')}` : "";
+function formatTimeForInput(v){
+  if(!v) return "";
+  let c = v.toString().trim().replace('.',':');
+  let p = c.split(':');
+  return p.length>=2 ? `${p[0].padStart(2,'0')}:${p[1].padStart(2,'0')}` : "";
+}
+
+function formatHNAN(id){
+  let el = document.getElementById(id);
+  let v = (el.value || "").replace(/-/g,'');
+  if(v.length > 2) el.value = v.slice(0,-2) + '-' + v.slice(-2);
+}
+
+function safeInt(v){ const n = parseInt(v,10); return isNaN(n)?0:n; }
+
+/* ================== Sheet picking ================== */
+function sheetNameToDate(sheetName){
+  const monthMap = {
+    "มกราคม":0,"กุมภาพันธ์":1,"มีนาคม":2,"เมษายน":3,"พฤษภาคม":4,"มิถุนายน":5,
+    "กรกฎาคม":6,"สิงหาคม":7,"กันยายน":8,"ตุลาคม":9,"พฤศจิกายน":10,"ธันวาคม":11,
+    "มกรา":0,"กุมภา":1,"มีนา":2,"เมษา":3,"พฤษภา":4,"มิถุนา":5,
+    "กรกฎา":6,"สิงหา":7,"กันยา":8,"ตุลา":9,"พฤศจิกา":10,"ธันวา":11
+  };
+
+  let mIdx = null;
+  for(const m in monthMap){
+    if(sheetName.includes(m)){ mIdx = monthMap[m]; break; }
   }
+  if(mIdx === null) return null;
 
-  function formatHNAN(id) {
-    let el = document.getElementById(id);
-    let v = (el.value || "").replace(/-/g, '');
-    if (v.length > 2) el.value = v.slice(0, -2) + '-' + v.slice(-2);
-  }
+  const yearMatch = sheetName.match(/\d+/);
+  if(!yearMatch) return null;
 
-  function safeInt(v){ const n=parseInt(v,10); return isNaN(n)?0:n; }
+  let yearBE = parseInt(yearMatch[0],10);
+  if(yearBE < 100) yearBE = 2500 + yearBE;
 
-  // ================== Sheet picking (latest) ==================
-  function sheetNameToDate(sheetName) {
-    if (!sheetName) return null;
+  const yearCE = yearBE - 543;
+  const d = new Date(yearCE, mIdx, 1);
+  d.setHours(0,0,0,0);
+  return d;
+}
 
-    const monthMap = {
-      "มกราคม":0,"กุมภาพันธ์":1,"มีนาคม":2,"เมษายน":3,"พฤษภาคม":4,"มิถุนายน":5,
-      "กรกฎาคม":6,"สิงหาคม":7,"กันยายน":8,"ตุลาคม":9,"พฤศจิกายน":10,"ธันวาคม":11,
-      "มกรา":0,"กุมภา":1,"มีนา":2,"เมษา":3,"พฤษภา":4,"มิถุนา":5,
-      "กรกฎา":6,"สิงหา":7,"กันยา":8,"ตุลา":9,"พฤศจิกา":10,"ธันวา":11
-    };
+function pickLatestSheet(names){
+  if(!Array.isArray(names) || names.length===0) return "";
+  return [...names].sort((a,b)=>{
+    const da = sheetNameToDate(a);
+    const db = sheetNameToDate(b);
+    if(!da && !db) return String(a).localeCompare(String(b));
+    if(!da) return 1;
+    if(!db) return -1;
+    return db - da;
+  })[0];
+}
 
-    let mIdx = null;
-    for (const m in monthMap) {
-      if (sheetName.includes(m)) { mIdx = monthMap[m]; break; }
+/* ================== Summary / Render ================== */
+function isCarryRow(x){
+  const st = (x.patientStatus || x.rawData?.[0] || "").trim();
+  return st === "ยอดยกมา";
+}
+function isNewThisMonthRow(x){
+  const st = (x.patientStatus || x.rawData?.[0] || "").trim();
+  return st === "รับใหม่" || st === "รับย้าย" || st === "รับ Refer";
+}
+
+function updateSummary(all){
+  const carryCount = all.filter(isCarryRow).length;
+  const newCount   = all.filter(isNewThisMonthRow).length;
+  const active = all.filter(x => x.status === 'ยังรักษาอยู่').length;
+  const dc = all.filter(x => x.status === 'จำหน่ายแล้ว').length;
+
+  document.getElementById('sumCarry').innerText = carryCount;
+  document.getElementById('sumNew').innerText = newCount;
+  document.getElementById('sumTotal').innerText = all.length;
+  document.getElementById('sumActive').innerText = active;
+  document.getElementById('sumDC').innerText = dc;
+  document.getElementById('sumRows').innerText = all.length;
+}
+
+function updateCharts(){
+  if(sithiChart) sithiChart.destroy();
+  if(saiChart) saiChart.destroy();
+
+  const sMap={}, saMap={};
+  lastData.forEach(item=>{
+    const r=item.rawData||[];
+    const sithi=r[17]||"ไม่ระบุ";
+    const sai=r[16]||"ไม่ระบุ";
+    sMap[sithi]=(sMap[sithi]||0)+1;
+    saMap[sai]=(saMap[sai]||0)+1;
+  });
+
+  const cfg = (t, m) => ({
+    type: 'bar',
+    data: { labels:Object.keys(m), datasets:[{ data:Object.values(m), borderRadius:8 }] },
+    options: {
+      indexAxis:'y',
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{ title:{display:true,text:t,align:'start'}, legend:{display:false} },
+      scales:{ x:{grid:{display:false}}, y:{grid:{display:false}} }
     }
-    if (mIdx === null) return null;
+  });
 
-    const yearMatch = sheetName.match(/\d+/);
-    if (!yearMatch) return null;
-
-    let yearBE = parseInt(yearMatch[0], 10);
-    if (yearBE < 100) yearBE = 2500 + yearBE;
-
-    const yearCE = yearBE - 543;
-    const d = new Date(yearCE, mIdx, 1);
-    d.setHours(0,0,0,0);
-    return d;
-  }
-
-  function pickLatestSheet(names) {
-    if (!Array.isArray(names) || names.length === 0) return "";
-    const sorted = [...names].sort((a, b) => {
-      const da = sheetNameToDate(a);
-      const db = sheetNameToDate(b);
-
-      if (!da && !db) return String(a).localeCompare(String(b));
-      if (!da) return 1;
-      if (!db) return -1;
-      return db - da;
-    });
-    return sorted[0];
-  }
-
-  // ================== Report helpers (Monthly period + Thai date) ==================
-  function parseThaiDate(dStr){
-    if(!dStr || typeof dStr !== 'string' || !dStr.includes('/')) return null;
-    const p = dStr.split('/');
-    if(p.length < 3) return null;
-    const d = new Date(parseInt(p[2],10)-543, parseInt(p[1],10)-1, parseInt(p[0],10));
-    d.setHours(0,0,0,0);
-    return d;
-  }
-
-  function getMonthPeriodFromSheetName(sheetName){
-    const d0 = sheetNameToDate(sheetName);
-    if(!d0) return null;
-    const start = new Date(d0.getFullYear(), d0.getMonth(), 1); start.setHours(0,0,0,0);
-    const end = new Date(d0.getFullYear(), d0.getMonth()+1, 0); end.setHours(0,0,0,0);
-    return { start, end, daysInMonth: end.getDate() };
-  }
-
-  function inMonth_(thaiDateStr, period){
-    if(!period) return false;
-    const d = parseThaiDate(thaiDateStr);
-    return d && d >= period.start && d <= period.end;
-  }
-
-  // ================== LOS preview (form only) ==================
-  function getMonthStartFromSheet() {
-    const months = ["มกรา","กุมภา","มีนา","เมษา","พฤษภา","มิถุนา","กรกฎา","สิงหา","กันยา","ตุลา","พฤศจิกา","ธันวา"];
-    let mIdx = -1;
-    months.forEach((m, i) => { if (currentSheet.includes(m)) mIdx = i; });
-    if (mIdx === -1) {
-      const full = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
-      full.forEach((m, i) => { if (currentSheet.includes(m)) mIdx = i; });
-    }
-    if (mIdx === -1) return null;
-
-    const yearMatch = currentSheet.match(/\d+/);
-    let year = yearMatch ? parseInt(yearMatch[0],10) : (new Date().getFullYear()+543);
-    if (year < 100) year = 2500 + year;
-    year = year - 543;
-
-    const d = new Date(year, mIdx, 1);
-    d.setHours(0,0,0,0);
-    return d;
-  }
-
-  function calculateLOSPreview() {
-    const admitUnder6 = document.getElementById('admitUnder6').value.trim();
-    if (admitUnder6 !== "") { document.getElementById('los').value = "0"; return; }
-
-    const sVal = document.getElementById('inDate').value;
-    const eVal =
-      document.getElementById('dcDate').value ||
-      document.getElementById('deathDate').value ||
-      document.getElementById('transferOutDate').value ||
-      document.getElementById('abscondDate').value ||
-      document.getElementById('refuseDate').value ||
-      document.getElementById('referOutDate').value;
-
-    if (!sVal) { document.getElementById('los').value = ""; return; }
-
-    const monthStart = getMonthStartFromSheet();
-    if (!monthStart) { document.getElementById('los').value = ""; return; }
-
-    const start = new Date(sVal); start.setHours(0,0,0,0);
-    let end = eVal ? new Date(eVal) : new Date(); end.setHours(0,0,0,0);
-
-    const ms = monthStart;
-    const me = new Date(ms.getFullYear(), ms.getMonth()+1, 0); me.setHours(0,0,0,0);
-
-    let calcStart = (start < ms) ? ms : start;
-    if (end > me) end = me;
-    if (end < calcStart) { document.getElementById('los').value = "0"; return; }
-
-    const los = Math.floor((end - calcStart) / 86400000) + 1;
-    document.getElementById('los').value = String(los);
-  }
-
-  // ================== Charts (dashboard) ==================
-  function updateCharts(sMap, saMap) {
-    if (sithiChart) sithiChart.destroy();
-    if (saiChart) saiChart.destroy();
-
-    const cfg = (t, m, color) => ({
-      type: 'bar',
-      data: { labels: Object.keys(m), datasets: [{ data: Object.values(m), backgroundColor: color, borderRadius: 8 }] },
-      options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { title: { display: true, text: t, align: 'start' }, legend: { display: false } },
-        scales: { x:{grid:{display:false}}, y:{grid:{display:false}} }
-      }
-    });
-
-    sithiChart = new Chart(document.getElementById('chartSithi'), cfg('สิทธิการรักษา', sMap, '#0d6efd'));
-    saiChart = new Chart(document.getElementById('chartSai'), cfg('สายการแพทย์', saMap, '#198754'));
-  }
-
-  // ================== Summary / Render ==================
-  function isCarryRow(x){
-    const st = (x.patientStatus || x.rawData?.[0] || "").trim();
-    return st === "ยอดยกมา";
-  }
-  function isNewThisMonthRow(x){
-    const st = (x.patientStatus || x.rawData?.[0] || "").trim();
-    return st === "รับใหม่" || st === "รับย้าย" || st === "รับ Refer";
-  }
-
-  function updateSummary(all){
-    const carryCount = all.filter(isCarryRow).length;
-    const newCount   = all.filter(isNewThisMonthRow).length;
-
-    const active = all.filter(x => x.status === 'ยังรักษาอยู่').length;
-    const dc = all.filter(x => x.status === 'จำหน่ายแล้ว').length;
-
-    document.getElementById('sumCarry').innerText = carryCount;
-    document.getElementById('sumNew').innerText = newCount;
-    document.getElementById('sumTotal').innerText = all.length;
-
-    document.getElementById('sumActive').innerText = active;
-    document.getElementById('sumDC').innerText = dc;
-    document.getElementById('sumRows').innerText = all.length;
-  }
+  sithiChart = new Chart(document.getElementById('chartSithi'), cfg('สิทธิการรักษา', sMap));
+  saiChart   = new Chart(document.getElementById('chartSai'),   cfg('สายการแพทย์', saMap));
+}
 
 function buildRowHtml(item){
   const r = item.rawData || [];
@@ -741,7 +551,6 @@ function buildRowHtml(item){
     "รับ Refer": "bg-info text-dark"
   };
   const typeBadge = badgeMap[type] || "bg-light text-dark";
-
   const statusBadge = item.status === 'จำหน่ายแล้ว' ? 'bg-success' : 'bg-warning text-dark';
 
   const losVal = parseInt(item.displayLOS, 10);
@@ -749,11 +558,10 @@ function buildRowHtml(item){
     ? `<span class="long-stay">${item.displayLOS}</span>`
     : `${item.displayLOS ?? ''}`;
 
-  // สำคัญ: ไม่ฝัง object ลง HTML แล้ว ใช้ data-rowid อย่างเดียว
   const rowId = item.rowId ?? '';
 
   return `
-    <tr data-rowid="${rowId}">
+    <tr>
       <td><span class="badge ${typeBadge}">${type}</span></td>
       <td>${r[1] || ''}</td>
       <td>${r[13] || ''}</td>
@@ -767,18 +575,16 @@ function buildRowHtml(item){
           <button type="button" class="btn btn-sm btn-outline-danger js-pdf" data-rowid="${rowId}">PDF</button>
         </div>
       </td>
-    </tr>
-  `;
+    </tr>`;
 }
 
-  function findItemByRowId(rowId){
-  const rid = String(rowId || '').trim();
+function findItemByRowId(rowId){
+  const rid = String(rowId||"").trim();
   if(!rid) return null;
   return lastData.find(x => String(x.rowId) === rid) || null;
 }
 
 let __tableActionsBound = false;
-
 function __tableActionsHandler(e){
   const btn = e.target.closest('button.js-edit, button.js-pdf');
   if(!btn) return;
@@ -789,622 +595,394 @@ function __tableActionsHandler(e){
     Swal.fire('ไม่พบข้อมูล', 'ไม่พบ rowId ที่สอดคล้องกับข้อมูลล่าสุด', 'warning');
     return;
   }
-
   if(btn.classList.contains('js-edit')) editPatient(item);
   if(btn.classList.contains('js-pdf'))  printPDF(item);
 }
 
-function bindTableActions(){
+function bindTableActionsOnce(){
   if(__tableActionsBound) return;
   __tableActionsBound = true;
-
-  const carryBody = document.getElementById('carryBody');
-  const newBody   = document.getElementById('newBody');
-
-  if(carryBody) carryBody.addEventListener('click', __tableActionsHandler);
-  if(newBody)   newBody.addEventListener('click', __tableActionsHandler);
+  document.getElementById('carryBody')?.addEventListener('click', __tableActionsHandler);
+  document.getElementById('newBody')?.addEventListener('click', __tableActionsHandler);
 }
-  
-  function renderTables(){
-    const carry = lastData.filter(isCarryRow);
-    const nnew  = lastData.filter(isNewThisMonthRow);
 
-    document.getElementById('carryCount').innerText = carry.length;
-    document.getElementById('newCount').innerText = nnew.length;
+function renderTables(){
+  const carry = lastData.filter(isCarryRow);
+  const nnew  = lastData.filter(isNewThisMonthRow);
 
-    if (carryDT) carryDT.destroy();
-    if (newDT) newDT.destroy();
+  document.getElementById('carryCount').innerText = carry.length;
+  document.getElementById('newCount').innerText   = nnew.length;
 
-   document.getElementById('carryBody').innerHTML = carry.map(buildRowHtml).join('');
-document.getElementById('newBody').innerHTML   = nnew.map(buildRowHtml).join('');
+  if(carryDT) carryDT.destroy();
+  if(newDT) newDT.destroy();
 
-// ✅ ผูก event ปุ่มแก้/PDF แบบปลอดภัย
-bindTableActions();
+  document.getElementById('carryBody').innerHTML = carry.map(buildRowHtml).join('');
+  document.getElementById('newBody').innerHTML   = nnew.map(buildRowHtml).join('');
 
-    const activeAll = lastData.filter(x => x.status === 'ยังรักษาอยู่').length;
-    const dcAll = lastData.filter(x => x.status === 'จำหน่ายแล้ว').length;
-    document.getElementById('censusContent').innerHTML =
-      `<div class="d-flex justify-content-between align-items-end">
-         <div>
-           <div class="subtle">Active (ขณะนี้)</div>
-           <div style="font-size:38px;font-weight:900;line-height:1">${activeAll}</div>
-         </div>
-         <div class="text-end">
-           <div class="subtle">D/C</div>
-           <div style="font-size:20px;font-weight:900">${dcAll}</div>
-           <div class="subtle mt-1">รวมทั้งหมด: <b>${lastData.length}</b></div>
-         </div>
-       </div>`;
+  bindTableActionsOnce();
 
-    const sMap = {}, saMap = {};
-    lastData.forEach(item => {
-      const r = item.rawData || [];
-      const sithi = r[17] || "ไม่ระบุ";
-      const sai = r[16] || "ไม่ระบุ";
-      sMap[sithi] = (sMap[sithi] || 0) + 1;
-      saMap[sai] = (saMap[sai] || 0) + 1;
-    });
-    updateCharts(sMap, saMap);
+  const activeAll = lastData.filter(x=>x.status==='ยังรักษาอยู่').length;
+  const dcAll     = lastData.filter(x=>x.status==='จำหน่ายแล้ว').length;
 
-    carryDT = $('#carryTable').DataTable({
-      order: [[1, 'desc']],
-      responsive: true,
-      language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/th.json' }
-    });
+  document.getElementById('censusContent').innerHTML =
+    `<div class="d-flex justify-content-between align-items-end">
+       <div>
+         <div class="subtle">Active (ขณะนี้)</div>
+         <div style="font-size:38px;font-weight:900;line-height:1">${activeAll}</div>
+       </div>
+       <div class="text-end">
+         <div class="subtle">D/C</div>
+         <div style="font-size:20px;font-weight:900">${dcAll}</div>
+         <div class="subtle mt-1">รวมทั้งหมด: <b>${lastData.length}</b></div>
+       </div>
+     </div>`;
 
-    newDT = $('#newTable').DataTable({
-      order: [[1, 'desc']],
-      responsive: true,
-      language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/th.json' }
-    });
-  }
+  updateCharts();
 
-  // ================== Export ==================
-  function exportCSV(type){
-    let filtered = lastData;
-
-    if(type === 'CARRY'){
-      filtered = lastData.filter(isCarryRow);
-    } else if(type === 'NEW'){
-      filtered = lastData.filter(isNewThisMonthRow);
-    }
-
-    const headers = ['ประเภท','ลำดับ','HN','ชื่อ-สกุล','แผนก','LOS','สถานะ'];
-    const rows = filtered.map(x => {
-      const r = x.rawData || [];
-      return [x.patientStatus || r[0] || '', r[1] || '', r[13] || '', r[11] || '', r[15] || '', x.displayLOS ?? '', x.status || ''];
-    });
-
-    const csv = [headers, ...rows]
-      .map(arr => arr.map(v => `"${String(v).replaceAll('"','""')}"`).join(','))
-      .join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `patients_${currentSheet}_${type || 'ALL'}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  // ================== Load / Init ==================
-  document.addEventListener("DOMContentLoaded", () => {
-    initSheets();
-
-    callApi('getDropdownData').then(d => {
-      fillSelect('ward', d.ward);
-      fillSelect('sithi', d.sithi);
-      fillSelect('sai', d.sai);
-      document.getElementById('dxList').innerHTML = (d.dx || []).map(x => `<option value="${x}">`).join('');
-    });
-
-    setInterval(() => {
-      document.getElementById('currentTime').innerText = new Date().toLocaleString('th-TH');
-    }, 1000);
+  carryDT = $('#carryTable').DataTable({
+    order: [[1,'desc']],
+    responsive: true,
+    language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/th.json' }
   });
 
-  async function initSheets() {
-    const names = await callApi('getSheetNames');
-    const selector = document.getElementById('sheetSelector');
-    const btn = document.querySelector('button[onclick="closeMonthUI()"]');
-
-    if (!names || names.length === 0) {
-      selector.innerHTML = `<option value="">ยังไม่มีข้อมูล</option>`;
-      btn.innerText = "เริ่มเดือนแรก";
-      btn.classList.remove('btn-danger');
-      btn.classList.add('btn-warning');
-      currentSheet = "";
-      lastData = [];
-      updateSummary([]);
-      document.getElementById('censusContent').innerHTML = "ยังไม่มีข้อมูล";
-      return;
-    }
-
-    selector.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join('');
-    btn.innerText = "ปิดยอดเดือน";
-    btn.classList.remove('btn-warning');
-    btn.classList.add('btn-danger');
-
-    currentSheet = pickLatestSheet(names);
-    selector.value = currentSheet;
-
-    loadDashboard();
-  }
-
-  function onSheetChange() {
-    currentSheet = document.getElementById('sheetSelector').value;
-    loadDashboard();
-  }
-
-  function loadDashboard() {
-    Swal.fire({ title: 'โหลดข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-    callApi('getAllData', currentSheet).then(data => {
-      lastData = Array.isArray(data) ? data : [];
-      updateSummary(lastData);
-      document.getElementById('sheetStatusChip').innerText = 'โหลดแล้ว';
-      renderTables();
-      Swal.close();
-    }).catch(err => {
-      Swal.fire('ผิดพลาด', err.toString(), 'error');
-    });
-  }
-
-  // ================== Report (PRO) ==================
-  function destroyReportCharts(){
-    if (repChartIn) repChartIn.destroy();
-    if (repChartOut) repChartOut.destroy();
-    if (repChartLOS) repChartLOS.destroy();
-    repChartIn = repChartOut = repChartLOS = null;
-  }
-
-  function buildReportSkeleton(monthTitle){
-    return `
-      <div class="report-note mb-2">
-        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-start">
-          <div>
-            <div class="fw-black">นิยาม (สำหรับ HA/Accreditation)</div>
-            <div>• Patient Days = ผลรวม LOS ที่ตัดยอดภายในเดือน</div>
-            <div>• ALOS(จำหน่าย) = Patient Days / Separations</div>
-            <div>• ALOS(รับเข้า) = Patient Days / Admissions</div>
-            <div class="text-danger">• BOR ต้องใช้ “เตียงรวม” (พักไว้ก่อน)</div>
-          </div>
-          <div class="text-end">
-            <span class="pill">เดือน: <b>${monthTitle}</b></span>
-            <span class="pill">ออกรายงาน: <b>${new Date().toLocaleString('th-TH')}</b></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="row g-2">
-
-        <!-- KPI (แก้ layout ให้ไม่บีบ) -->
-        <div class="col-12">
-          <div class="row g-2 row-cols-1 row-cols-sm-2 row-cols-xl-4">
-            <div class="col">
-              <div class="kpi-card">
-                <div class="kpi-label">ยอดยกมา (BOB)</div>
-                <div class="kpi-value text-secondary" id="kpiCarry">0</div>
-                <div class="kpi-sub">ผู้ป่วยค้างจากเดือนก่อน</div>
-              </div>
-            </div>
-
-            <div class="col">
-              <div class="kpi-card">
-                <div class="kpi-label">รับเข้าในเดือน (Admissions)</div>
-                <div class="kpi-value text-primary" id="kpiInTotal">0</div>
-                <div class="kpi-sub">ใหม่ <b id="kpiInNew">0</b> | ย้าย <b id="kpiInTransfer">0</b> | Refer <b id="kpiInRefer">0</b></div>
-              </div>
-            </div>
-
-            <div class="col">
-              <div class="kpi-card">
-                <div class="kpi-label">จำหน่ายทั้งหมด (Separations)</div>
-                <div class="kpi-value text-success" id="kpiOutTotal">0</div>
-                <div class="kpi-sub">
-                  D/C <b id="kpiOutDC">0</b> |
-                  ย้ายออก <b id="kpiOutTO">0</b> |
-                  หนี <b id="kpiOutAbs">0</b> |
-                  ปฏิเสธ <b id="kpiOutRefu">0</b> |
-                  Refer Out <b id="kpiOutRO">0</b> |
-                  เสียชีวิต <b id="kpiOutDeath">0</b>
-                </div>
-              </div>
-            </div>
-
-            <div class="col">
-              <div class="kpi-card">
-                <div class="kpi-label">คงเหลือสิ้นเดือน (EOM Census)</div>
-                <div class="kpi-value text-dark" id="kpiEOM">0</div>
-                <div class="kpi-sub">ผู้ป่วยที่ยังรักษาอยู่</div>
-              </div>
-            </div>
-
-            <div class="col">
-              <div class="kpi-card">
-                <div class="kpi-label">Patient Days (วันนอนรวม)</div>
-                <div class="kpi-value text-dark" id="kpiPatientDays">0</div>
-                <div class="kpi-sub">รวม LOS ที่ตัดยอดในเดือน</div>
-              </div>
-            </div>
-
-            <div class="col">
-              <div class="kpi-card">
-                <div class="kpi-label">ALOS (จำหน่าย)</div>
-                <div class="kpi-value text-dark" id="kpiALOSOut">0.00</div>
-                <div class="kpi-sub">PatientDays / Separations</div>
-              </div>
-            </div>
-
-            <div class="col">
-              <div class="kpi-card">
-                <div class="kpi-label">ALOS (รับเข้า)</div>
-                <div class="kpi-value text-dark" id="kpiALOSIn">0.00</div>
-                <div class="kpi-sub">PatientDays / Admissions</div>
-              </div>
-            </div>
-
-            <div class="col">
-              <div class="kpi-card">
-                <div class="kpi-label">BOR (%)</div>
-                <div class="kpi-value text-muted">-</div>
-                <div class="kpi-sub">พักไว้ก่อน (ต้องมีเตียงรวม)</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Charts -->
-        <div class="col-12 col-lg-4">
-          <div class="report-block">
-            <div class="fw-black mb-2">Admissions by Type</div>
-            <canvas id="repChartIn" style="max-height:220px;"></canvas>
-          </div>
-        </div>
-
-        <div class="col-12 col-lg-4">
-          <div class="report-block">
-            <div class="fw-black mb-2">Outcome Mix</div>
-            <canvas id="repChartOut" style="max-height:220px;"></canvas>
-          </div>
-        </div>
-
-        <div class="col-12 col-lg-4">
-          <div class="report-block">
-            <div class="fw-black mb-2">LOS Distribution</div>
-            <canvas id="repChartLOS" style="max-height:220px;"></canvas>
-          </div>
-        </div>
-
-        <!-- Long stay -->
-        <div class="col-12">
-          <div class="report-block">
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="fw-black">Long-stay (≥30 วัน)</div>
-              <span class="badge bg-danger" id="kpiLongStay">0 ราย</span>
-            </div>
-            <div class="subtle mt-1">ใช้ติดตามเคสค้างเตียง/วางแผนจำหน่าย (แสดงสูงสุด 50 ราย)</div>
-            <div class="mt-2" id="longStayList" style="max-height:200px; overflow:auto;"></div>
-          </div>
-        </div>
-
-      </div>
-    `;
-  }
-
-  function showFullReport() {
-    Swal.fire({ title: 'คำนวณรายงานสรุป...', didOpen: () => Swal.showLoading() });
-
-    callApi('getAllData', currentSheet).then(patients => {
-      patients = Array.isArray(patients) ? patients : [];
-      document.getElementById('reportMonthTitle').innerText = currentSheet;
-
-      // render skeleton first
-      destroyReportCharts();
-      document.getElementById('reportResult').innerHTML = buildReportSkeleton(currentSheet);
-
-      // ===== Compute counts =====
-      const typeOf = (item) => ((item.patientStatus || item.rawData?.[0] || "").trim());
-
-      const carry = patients.filter(x => typeOf(x) === "ยอดยกมา").length;
-      const inNew = patients.filter(x => typeOf(x) === "รับใหม่").length;
-      const inTransfer = patients.filter(x => typeOf(x) === "รับย้าย").length;
-      const inRefer = patients.filter(x => typeOf(x) === "รับ Refer").length;
-      const inTotal = inNew + inTransfer + inRefer;
-
-      // ===== Separations (ตามข้อ 1) + fallback กัน period อ่านไม่ได้แล้วกลายเป็น 0 ทั้งหมด =====
-      const period = getMonthPeriodFromSheetName(currentSheet);
-
-      const outDC    = period ? patients.filter(x => inMonth_(x.rawData?.[20], period)).length : patients.filter(x => x.rawData?.[20]).length;
-      const outTO    = period ? patients.filter(x => inMonth_(x.rawData?.[25], period)).length : patients.filter(x => x.rawData?.[25]).length;
-      const outAbs   = period ? patients.filter(x => inMonth_(x.rawData?.[26], period)).length : patients.filter(x => x.rawData?.[26]).length;
-      const outRefu  = period ? patients.filter(x => inMonth_(x.rawData?.[27], period)).length : patients.filter(x => x.rawData?.[27]).length;
-      const outRO    = period ? patients.filter(x => inMonth_(x.rawData?.[28], period)).length : patients.filter(x => x.rawData?.[28]).length;
-      const outDeath = period ? patients.filter(x => inMonth_(x.rawData?.[30], period)).length : patients.filter(x => x.rawData?.[30]).length;
-
-      const outTotal = outDC + outTO + outAbs + outRefu + outRO + outDeath;
-
-      const eom = patients.filter(x => x.status === "ยังรักษาอยู่").length;
-
-      const patientDays = patients.reduce((s, x) => s + (safeInt(x.displayLOS)), 0);
-
-      const alosOut = (outTotal > 0) ? (patientDays / outTotal) : 0;
-      const alosIn  = (inTotal > 0) ? (patientDays / inTotal) : 0;
-
-      const longStay = patients
-        .filter(x => safeInt(x.displayLOS) >= 30)
-        .sort((a,b)=> safeInt(b.displayLOS) - safeInt(a.displayLOS));
-
-      // ===== Fill KPI =====
-      document.getElementById('kpiCarry').innerText = carry;
-      document.getElementById('kpiInTotal').innerText = inTotal;
-      document.getElementById('kpiInNew').innerText = inNew;
-      document.getElementById('kpiInTransfer').innerText = inTransfer;
-      document.getElementById('kpiInRefer').innerText = inRefer;
-
-      document.getElementById('kpiOutTotal').innerText = outTotal;
-      document.getElementById('kpiOutDC').innerText = outDC;
-      document.getElementById('kpiOutTO').innerText = outTO;
-      document.getElementById('kpiOutAbs').innerText = outAbs;
-      document.getElementById('kpiOutRefu').innerText = outRefu;
-      document.getElementById('kpiOutRO').innerText = outRO;
-      document.getElementById('kpiOutDeath').innerText = outDeath;
-
-      document.getElementById('kpiEOM').innerText = eom;
-      document.getElementById('kpiPatientDays').innerText = patientDays;
-      document.getElementById('kpiALOSOut').innerText = alosOut.toFixed(2);
-      document.getElementById('kpiALOSIn').innerText = alosIn.toFixed(2);
-
-      document.getElementById('kpiLongStay').innerText = `${longStay.length} ราย`;
-      document.getElementById('longStayList').innerHTML = longStay.slice(0,50).map(x => {
-        const r = x.rawData || [];
-        return `
-          <div class="d-flex justify-content-between border-bottom py-2">
-            <div>
-              <div class="fw-bold">${r[11] || '-'}</div>
-              <div class="subtle">HN ${r[13]||'-'} | Ward ${r[15]||'-'} | สิทธิ ${r[17]||'-'} | สาย ${r[16]||'-'}</div>
-            </div>
-            <div class="text-danger fw-black" style="font-size:18px">${safeInt(x.displayLOS)}</div>
-          </div>
-        `;
-      }).join('') || `<div class="text-muted">ไม่มี</div>`;
-
-      // ===== Charts =====
-      repChartIn = new Chart(document.getElementById('repChartIn'), {
-        type: 'doughnut',
-        data: {
-          labels: ['รับใหม่','รับย้าย','รับ Refer'],
-          datasets: [{ data: [inNew, inTransfer, inRefer] }]
-        },
-        options: { plugins: { legend: { position: 'bottom' } } }
-      });
-
-      repChartOut = new Chart(document.getElementById('repChartOut'), {
-        type: 'doughnut',
-        data: {
-          labels: ['D/C','ย้ายออก','หนี','ปฏิเสธ','Refer Out','เสียชีวิต'],
-          datasets: [{ data: [outDC, outTO, outAbs, outRefu, outRO, outDeath] }]
-        },
-        options: { plugins: { legend: { position: 'bottom' } } }
-      });
-
-      const losBuckets = { "0":0, "1-3":0, "4-7":0, "8-14":0, "15-29":0, "30+":0 };
-      patients.forEach(x => {
-        const v = safeInt(x.displayLOS);
-        if (v === 0) losBuckets["0"]++;
-        else if (v <= 3) losBuckets["1-3"]++;
-        else if (v <= 7) losBuckets["4-7"]++;
-        else if (v <= 14) losBuckets["8-14"]++;
-        else if (v <= 29) losBuckets["15-29"]++;
-        else losBuckets["30+"]++;
-      });
-
-      repChartLOS = new Chart(document.getElementById('repChartLOS'), {
-        type:'bar',
-        data:{ labels:Object.keys(losBuckets), datasets:[{ data:Object.values(losBuckets), borderRadius: 8 }] },
-        options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } }
-      });
-
-      Swal.close();
-      new bootstrap.Modal(document.getElementById('reportModal')).show();
-    }).catch(err => Swal.fire('ผิดพลาด', err.toString(), 'error'));
-  }
-
-  // ================== Edit / PDF ==================
-  function editPatient(item) {
-    const r = item.rawData || [];
-
-    document.getElementById('rowId').value = item.rowId;
-    document.getElementById('seq').value = r[1] || "";
-    document.getElementById('patientStatusStored').value = r[0] || "รับใหม่";
-
-    document.getElementById('prefix').value = r[32] || 'นาย';
-    document.getElementById('patientName').value = r[11] || "";
-    document.getElementById('gender').value = r[33] || 'ชาย';
-
-    const am = (r[12]||"").match(/(\d+) ปี (\d+) เดือน (\d+) วัน/);
-    if(am){
-      document.getElementById('ageYear').value = am[1];
-      document.getElementById('ageMonth').value = am[2];
-      document.getElementById('ageDay').value = am[3];
-    } else {
-      document.getElementById('ageYear').value = 0;
-      document.getElementById('ageMonth').value = 0;
-      document.getElementById('ageDay').value = 0;
-    }
-
-    document.getElementById('inDate').value = formatDateForInput(r[2]||r[5]||r[8]);
-    document.getElementById('inTime').value = formatTimeForInput(r[3]||r[6]||r[9]);
-    document.getElementById('inDept').value = r[4]||r[7]||r[10]||"";
-
-    document.getElementById('hn').value = r[13] || "";
-    document.getElementById('an').value = r[14] || "";
-
-    document.getElementById('ward').value = r[15] || "";
-    document.getElementById('sai').value = r[16] || "";
-    document.getElementById('sithi').value = r[17] || "";
-    document.getElementById('dx1').value = r[18] || "";
-    document.getElementById('dx2').value = r[19] || "";
-
-    document.getElementById('dcDate').value = formatDateForInput(r[20]);
-    document.getElementById('fu').value = r[21] || "";
-    document.getElementById('admitUnder6').value = r[22] || "";
-    document.getElementById('deathDate').value = formatDateForInput(r[30]);
-    document.getElementById('transferOutDate').value = formatDateForInput(r[25]);
-    document.getElementById('transferOut').value = r[24] || "";
-    document.getElementById('abscondDate').value = formatDateForInput(r[26]);
-    document.getElementById('refuseDate').value = formatDateForInput(r[27]);
-    document.getElementById('referOutDate').value = formatDateForInput(r[28]);
-    document.getElementById('referDestination').value = r[29] || "";
-    document.getElementById('address').value = r[31] || "";
-
-    if(r[2]) document.getElementById('inType').value = "รับใหม่";
-    else if(r[5]) document.getElementById('inType').value = "รับย้าย";
-    else if(r[8]) document.getElementById('inType').value = "รับ Refer";
-
-    calculateLOSPreview();
-    new bootstrap.Tab(document.querySelector('button[data-bs-target="#form-pane"]')).show();
-    window.scrollTo(0,0);
-    console.log("dc raw:", r[20], "-> iso:", formatDateForInput(r[20]));
-console.log("death raw:", r[30], "-> iso:", formatDateForInput(r[30]));
-  }
-
-  function printPDF(item) {
-    const win = window.open("", "_blank");
-    const r = item.rawData || [];
-
-    const p = {
-      prefix:r[32], patientName:r[11], hn:r[13], an:r[14], gender:r[33], age:r[12],
-      address:r[31], sithi:r[17], ward:r[15], sai:r[16], dx1:r[18], dx2:r[19],
-      inType:r[2]?'รับใหม่':(r[5]?'รับย้าย':'Refer'),
-      inDate:r[2]||r[5]||r[8], inTime:r[3]||r[6]||r[9], inDept:r[4]||r[7]||r[10],
-      status:item.status, los:item.displayLOS, dcDate:r[20], deathDate:r[30], transferOut:r[24],
-      admitUnder6:r[22], patientStatus:r[0]
-    };
-
-    callApi('createPatientPDF', p).then(b => {
-      win.document.write(`<iframe src="data:application/pdf;base64,${b}" style="width:100%;height:100vh;border:none;"></iframe>`);
-    }).catch(err => win.document.write(`<pre>${err.toString()}</pre>`));
-  }
-
-  // ================== Form submit ==================
-  document.getElementById('dataForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    Swal.fire({ title: 'บันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-    const inT = document.getElementById('inType').value;
-    const existingStatus = (document.getElementById('patientStatusStored').value || "").trim();
-    const statusToSave = (existingStatus === "ยอดยกมา") ? "ยอดยกมา" : inT;
-
-    const formData = {
-      rowId: document.getElementById('rowId').value,
-      seq: document.getElementById('seq').value,
-      patientStatus: statusToSave,
-
-      prefix: document.getElementById('prefix').value,
-      patientName: document.getElementById('patientName').value,
-      gender: document.getElementById('gender').value,
-      age: `${document.getElementById('ageYear').value} ปี ${document.getElementById('ageMonth').value} เดือน ${document.getElementById('ageDay').value} วัน`,
-
-      hn: document.getElementById('hn').value,
-      an: document.getElementById('an').value,
-      ward: document.getElementById('ward').value,
-      sai: document.getElementById('sai').value,
-      sithi: document.getElementById('sithi').value,
-      dx1: document.getElementById('dx1').value,
-      dx2: document.getElementById('dx2').value,
-      address: document.getElementById('address').value,
-
-      los: document.getElementById('los').value,
-      fu: document.getElementById('fu').value,
-      admitUnder6: document.getElementById('admitUnder6').value,
-
-      dcDate: formatDateForSheet(document.getElementById('dcDate').value),
-      deathDate: formatDateForSheet(document.getElementById('deathDate').value),
-      transferOutDate: formatDateForSheet(document.getElementById('transferOutDate').value),
-      transferOut: document.getElementById('transferOut').value,
-      abscondDate: formatDateForSheet(document.getElementById('abscondDate').value),
-      refuseDate: formatDateForSheet(document.getElementById('refuseDate').value),
-      referOutDate: formatDateForSheet(document.getElementById('referOutDate').value),
-      referDestination: document.getElementById('referDestination').value
-    };
-
-    const iD = formatDateForSheet(document.getElementById('inDate').value);
-    const iT = document.getElementById('inTime').value;
-    const iDep = document.getElementById('inDept').value;
-
-    if(inT === "รับใหม่"){
-      formData.newMark=iD; formData.newTime=iT; formData.newDept=iDep;
-    } else if(inT === "รับย้าย"){
-      formData.transferMark=iD; formData.transferTime=iT; formData.transferDept=iDep;
-    } else {
-      formData.referMark=iD; formData.referTime=iT; formData.referDept=iDep;
-    }
-
-    try{
-      await callApi('processData', { targetSheet: currentSheet, formData });
-      Swal.fire('สำเร็จ', '', 'success');
-      loadDashboard();
-      new bootstrap.Tab(document.querySelector('button[data-bs-target="#list-pane"]')).show();
-    }catch(err){
-      Swal.fire('ผิดพลาด', err.toString(), 'error');
-    }
+  newDT = $('#newTable').DataTable({
+    order: [[1,'desc']],
+    responsive: true,
+    language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/th.json' }
+  });
+}
+
+/* ================== LOS preview (form only) ================== */
+function getMonthStartFromSheet(){
+  const d0 = sheetNameToDate(currentSheet);
+  if(!d0) return null;
+  const start = new Date(d0.getFullYear(), d0.getMonth(), 1);
+  start.setHours(0,0,0,0);
+  return start;
+}
+
+function calculateLOSPreview(){
+  const admitUnder6 = document.getElementById('admitUnder6').value.trim();
+  if(admitUnder6 !== ""){ document.getElementById('los').value="0"; return; }
+
+  const sVal = document.getElementById('inDate').value;
+  const eVal =
+    document.getElementById('dcDate').value ||
+    document.getElementById('deathDate').value ||
+    document.getElementById('transferOutDate').value ||
+    document.getElementById('abscondDate').value ||
+    document.getElementById('refuseDate').value ||
+    document.getElementById('referOutDate').value;
+
+  if(!sVal){ document.getElementById('los').value=""; return; }
+
+  const monthStart = getMonthStartFromSheet();
+  if(!monthStart){ document.getElementById('los').value=""; return; }
+
+  const start = new Date(sVal); start.setHours(0,0,0,0);
+  let end = eVal ? new Date(eVal) : new Date(); end.setHours(0,0,0,0);
+
+  const ms = monthStart;
+  const me = new Date(ms.getFullYear(), ms.getMonth()+1, 0); me.setHours(0,0,0,0);
+
+  let calcStart = (start < ms) ? ms : start;
+  if(end > me) end = me;
+  if(end < calcStart){ document.getElementById('los').value="0"; return; }
+
+  const los = Math.floor((end - calcStart)/86400000) + 1;
+  document.getElementById('los').value = String(los);
+}
+
+/* ================== Export ================== */
+function exportCSV(type){
+  let filtered = lastData;
+  if(type==='CARRY') filtered = lastData.filter(isCarryRow);
+  if(type==='NEW')   filtered = lastData.filter(isNewThisMonthRow);
+
+  const headers = ['ประเภท','ลำดับ','HN','ชื่อ-สกุล','แผนก','LOS','สถานะ'];
+  const rows = filtered.map(x=>{
+    const r=x.rawData||[];
+    return [x.patientStatus||r[0]||'', r[1]||'', r[13]||'', r[11]||'', r[15]||'', x.displayLOS??'', x.status||''];
   });
 
-  function prepareNewForm(){
-    document.getElementById('dataForm').reset();
-    document.getElementById('rowId').value = "";
-    document.getElementById('patientStatusStored').value = "";
-    document.getElementById('inType').value = "รับใหม่";
+  const csv = [headers, ...rows]
+    .map(arr => arr.map(v => `"${String(v).replaceAll('"','""')}"`).join(','))
+    .join('\n');
 
-    callApi('getNextSeq', currentSheet).then(s => {
-      document.getElementById('seq').value = s;
-    }).catch(()=>{ document.getElementById('seq').value=""; });
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
 
-    new bootstrap.Tab(document.querySelector('button[data-bs-target="#form-pane"]')).show();
-    window.scrollTo(0,0);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `patients_${currentSheet}_${type||'ALL'}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ================== Load / Init ================== */
+async function initSheets(){
+  const names = await callApi('getSheetNames');
+  const selector = document.getElementById('sheetSelector');
+  const btn = document.querySelector('button[onclick="closeMonthUI()"]');
+
+  if(!names || names.length===0){
+    selector.innerHTML = `<option value="">ยังไม่มีข้อมูล</option>`;
+    btn.innerText = "เริ่มเดือนแรก";
+    btn.classList.remove('btn-danger');
+    btn.classList.add('btn-warning');
+    currentSheet = "";
+    lastData = [];
+    updateSummary([]);
+    document.getElementById('censusContent').innerHTML = "ยังไม่มีข้อมูล";
+    return;
   }
 
-  async function checkAN() {
-    formatHNAN('an');
-    if (!document.getElementById('rowId').value) {
-      const isDup = await callApi('checkDuplicateAN', { targetSheet: currentSheet, an: document.getElementById('an').value });
-      if (isDup) Swal.fire('AN ซ้ำ!', 'มีในชีทปัจจุบันแล้ว', 'warning');
-    }
+  selector.innerHTML = names.map(n=>`<option value="${n}">${n}</option>`).join('');
+  btn.innerText = "ปิดยอดเดือน";
+  btn.classList.remove('btn-warning');
+  btn.classList.add('btn-danger');
+
+  currentSheet = pickLatestSheet(names);
+  selector.value = currentSheet;
+
+  await loadDashboard();
+}
+
+async function loadDashboard(){
+  Swal.fire({ title:'โหลดข้อมูล...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+  try{
+    const data = await callApi('getAllData', currentSheet);
+    lastData = Array.isArray(data) ? data : [];
+    updateSummary(lastData);
+    document.getElementById('sheetStatusChip').innerText = 'โหลดแล้ว';
+    renderTables();
+    Swal.close();
+  }catch(err){
+    Swal.fire('ผิดพลาด', err.toString(), 'error');
+  }
+}
+
+function onSheetChange(){
+  currentSheet = document.getElementById('sheetSelector').value;
+  loadDashboard();
+}
+
+/* ================== Edit / PDF ================== */
+function editPatient(item){
+  const r = item.rawData || [];
+
+  document.getElementById('rowId').value = item.rowId;
+  document.getElementById('seq').value = r[1] || "";
+  document.getElementById('patientStatusStored').value = r[0] || "รับใหม่";
+
+  document.getElementById('prefix').value = r[32] || 'นาย';
+  document.getElementById('patientName').value = r[11] || "";
+  document.getElementById('gender').value = r[33] || 'ชาย';
+
+  const am = (r[12]||"").match(/(\d+) ปี (\d+) เดือน (\d+) วัน/);
+  document.getElementById('ageYear').value  = am ? am[1] : 0;
+  document.getElementById('ageMonth').value = am ? am[2] : 0;
+  document.getElementById('ageDay').value   = am ? am[3] : 0;
+
+  document.getElementById('inDate').value = formatDateForInput(r[2]||r[5]||r[8]);
+  document.getElementById('inTime').value = formatTimeForInput(r[3]||r[6]||r[9]);
+  document.getElementById('inDept').value = r[4]||r[7]||r[10]||"";
+
+  document.getElementById('hn').value = r[13] || "";
+  document.getElementById('an').value = r[14] || "";
+  document.getElementById('ward').value = r[15] || "";
+  document.getElementById('sai').value = r[16] || "";
+  document.getElementById('sithi').value = r[17] || "";
+  document.getElementById('dx1').value = r[18] || "";
+  document.getElementById('dx2').value = r[19] || "";
+
+  document.getElementById('dcDate').value = formatDateForInput(r[20]);
+  document.getElementById('fu').value = r[21] || "";
+  document.getElementById('admitUnder6').value = r[22] || "";
+
+  document.getElementById('deathDate').value = formatDateForInput(r[30]);
+  document.getElementById('transferOutDate').value = formatDateForInput(r[25]);
+  document.getElementById('transferOut').value = r[24] || "";
+  document.getElementById('abscondDate').value = formatDateForInput(r[26]);
+  document.getElementById('refuseDate').value = formatDateForInput(r[27]);
+  document.getElementById('referOutDate').value = formatDateForInput(r[28]);
+  document.getElementById('referDestination').value = r[29] || "";
+
+  document.getElementById('address').value = r[31] || "";
+
+  if(r[2]) document.getElementById('inType').value = "รับใหม่";
+  else if(r[5]) document.getElementById('inType').value = "รับย้าย";
+  else if(r[8]) document.getElementById('inType').value = "รับ Refer";
+
+  calculateLOSPreview();
+  new bootstrap.Tab(document.querySelector('button[data-bs-target="#form-pane"]')).show();
+  window.scrollTo(0,0);
+}
+
+function printPDF(item){
+  const win = window.open("", "_blank");
+  const r = item.rawData || [];
+  const p = {
+    prefix:r[32], patientName:r[11], hn:r[13], an:r[14], ward:r[15],
+    dx1:r[18]
+  };
+
+  callApi('createPatientPDF', p).then(b=>{
+    win.document.write(`<iframe src="data:application/pdf;base64,${b}" style="width:100%;height:100vh;border:none;"></iframe>`);
+  }).catch(err=>{
+    win.document.write(`<pre>${err.toString()}</pre>`);
+  });
+}
+
+/* ================== Form submit ================== */
+document.getElementById('dataForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  Swal.fire({ title:'บันทึก...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+
+  const inT = document.getElementById('inType').value;
+  const existingStatus = (document.getElementById('patientStatusStored').value || "").trim();
+  const statusToSave = (existingStatus === "ยอดยกมา") ? "ยอดยกมา" : inT;
+
+  const formData = {
+    rowId: document.getElementById('rowId').value,
+    seq: document.getElementById('seq').value,
+    patientStatus: statusToSave,
+
+    prefix: document.getElementById('prefix').value,
+    patientName: document.getElementById('patientName').value,
+    gender: document.getElementById('gender').value,
+    age: `${document.getElementById('ageYear').value} ปี ${document.getElementById('ageMonth').value} เดือน ${document.getElementById('ageDay').value} วัน`,
+
+    hn: document.getElementById('hn').value,
+    an: document.getElementById('an').value,
+    ward: document.getElementById('ward').value,
+    sai: document.getElementById('sai').value,
+    sithi: document.getElementById('sithi').value,
+    dx1: document.getElementById('dx1').value,
+    dx2: document.getElementById('dx2').value,
+    address: document.getElementById('address').value,
+
+    los: document.getElementById('los').value,
+    fu: document.getElementById('fu').value,
+    admitUnder6: document.getElementById('admitUnder6').value,
+
+    dcDate: formatDateForSheet(document.getElementById('dcDate').value),
+    deathDate: formatDateForSheet(document.getElementById('deathDate').value),
+    transferOutDate: formatDateForSheet(document.getElementById('transferOutDate').value),
+    transferOut: document.getElementById('transferOut').value,
+    abscondDate: formatDateForSheet(document.getElementById('abscondDate').value),
+    refuseDate: formatDateForSheet(document.getElementById('refuseDate').value),
+    referOutDate: formatDateForSheet(document.getElementById('referOutDate').value),
+    referDestination: document.getElementById('referDestination').value
+  };
+
+  const iD = formatDateForSheet(document.getElementById('inDate').value);
+  const iT = document.getElementById('inTime').value;
+  const iDep = document.getElementById('inDept').value;
+
+  if(inT === "รับใหม่"){
+    formData.newMark=iD; formData.newTime=iT; formData.newDept=iDep;
+  }else if(inT === "รับย้าย"){
+    formData.transferMark=iD; formData.transferTime=iT; formData.transferDept=iDep;
+  }else{
+    formData.referMark=iD; formData.referTime=iT; formData.referDept=iDep;
   }
 
-  async function closeMonthUI(){
+  try{
+    await callApi('processData', { targetSheet: currentSheet, formData });
+    Swal.fire('สำเร็จ', '', 'success');
+    await loadDashboard();
+    new bootstrap.Tab(document.querySelector('button[data-bs-target="#list-pane"]')).show();
+  }catch(err){
+    Swal.fire('ผิดพลาด', err.toString(), 'error');
+  }
+});
+
+/* ================== New form ================== */
+async function prepareNewForm(){
+  document.getElementById('dataForm').reset();
+  document.getElementById('rowId').value = "";
+  document.getElementById('patientStatusStored').value = "";
+  document.getElementById('inType').value = "รับใหม่";
+
+  try{
+    const s = await callApi('getNextSeq', currentSheet);
+    document.getElementById('seq').value = s;
+  }catch{
+    document.getElementById('seq').value = "";
+  }
+
+  new bootstrap.Tab(document.querySelector('button[data-bs-target="#form-pane"]')).show();
+  window.scrollTo(0,0);
+}
+
+/* ================== Duplicate AN ================== */
+async function checkAN(){
+  formatHNAN('an');
+  if(!document.getElementById('rowId').value){
+    const isDup = await callApi('checkDuplicateAN', { targetSheet: currentSheet, an: document.getElementById('an').value });
+    if(isDup) Swal.fire('AN ซ้ำ!', 'มีในชีทปัจจุบันแล้ว', 'warning');
+  }
+}
+
+/* ================== Close month (✅ แก้ undefined แน่นอน) ================== */
+async function closeMonthUI(){
   if(!currentSheet){
-    const r = await callApi('initFirstMonth');
+    await callApi('initFirstMonth');
     await initSheets();
     return;
   }
 
   const ok = await Swal.fire({
     title: `ยืนยันปิดยอดเดือน ${currentSheet}?`,
-    text: "ระบบจะทำ Snapshot + สร้างชีทเดือนถัดไป + lock แบบเตือน (ยังบันทึกได้)",
+    text: "ระบบจะ Snapshot + สร้างชีทเดือนถัดไป + lock เดือนเก่า",
     icon: "warning",
     showCancelButton: true,
     confirmButtonText: "ปิดยอด",
     cancelButtonText: "ยกเลิก"
   });
-
   if(!ok.isConfirmed) return;
 
   Swal.fire({ title:'กำลังปิดยอด...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
   try{
     await callApi('closeMonthAction', { currentSheetName: currentSheet });
     Swal.fire('สำเร็จ', 'ปิดยอดแล้ว', 'success');
-    await initSheets(); // รีโหลดรายชื่อชีท + เข้าเดือนล่าสุด
+    await initSheets();
   }catch(err){
     Swal.fire('ผิดพลาด', err.toString(), 'error');
   }
 }
 
+/* ================== Report (ถ้ายังไม่ใช้ ให้ค้างไว้ก่อน) ================== */
+function showFullReport(){
+  Swal.fire('ยังไม่เปิดใช้งาน', 'คุณสามารถต่อยอดจากเวอร์ชันเดิมได้ (ผมทำให้ต่อได้ถ้าบอกว่าต้องการ KPI อะไรบ้าง)', 'info');
+}
+
+/* ================== Boot ================== */
+document.addEventListener("DOMContentLoaded", async ()=>{
+  await initSheets();
+
+  const d = await callApi('getDropdownData');
+  fillSelect('ward', d.ward);
+  fillSelect('sithi', d.sithi);
+  fillSelect('sai', d.sai);
+  document.getElementById('dxList').innerHTML = (d.dx||[]).map(x=>`<option value="${x}">`).join('');
+
+  setInterval(()=>{ document.getElementById('currentTime').innerText = new Date().toLocaleString('th-TH'); }, 1000);
+});
+
+/* ================== Make sure onclick finds functions ================== */
+window.onSheetChange = onSheetChange;
+window.loadDashboard = loadDashboard;
+window.prepareNewForm = prepareNewForm;
+window.exportCSV = exportCSV;
+window.closeMonthUI = closeMonthUI;
+window.showFullReport = showFullReport;
+window.calculateLOSPreview = calculateLOSPreview;
+window.checkAN = checkAN;
+window.formatHNAN = formatHNAN;
 </script>
 
 </body>
