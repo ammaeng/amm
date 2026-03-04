@@ -503,6 +503,30 @@
     return d;
   }
 
+  // ================== Report helpers (Monthly period + Thai date) ==================
+function parseThaiDate(dStr){
+  if(!dStr || typeof dStr !== 'string' || !dStr.includes('/')) return null;
+  const p = dStr.split('/');
+  if(p.length < 3) return null;
+  const d = new Date(parseInt(p[2],10)-543, parseInt(p[1],10)-1, parseInt(p[0],10));
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function getMonthPeriodFromSheetName(sheetName){
+  const d0 = sheetNameToDate(sheetName);
+  if(!d0) return null;
+  const start = new Date(d0.getFullYear(), d0.getMonth(), 1); start.setHours(0,0,0,0);
+  const end = new Date(d0.getFullYear(), d0.getMonth()+1, 0); end.setHours(0,0,0,0);
+  return { start, end, daysInMonth: end.getDate() };
+}
+
+function inMonth_(thaiDateStr, period){
+  if(!period) return false;
+  const d = parseThaiDate(thaiDateStr);
+  return d && d >= period.start && d <= period.end;
+}
+
   function pickLatestSheet(names) {
     if (!Array.isArray(names) || names.length === 0) return "";
     const sorted = [...names].sort((a, b) => {
@@ -845,9 +869,15 @@
 
             <div class="col-6 col-lg-3"><div class="kpi-card">
               <div class="kpi-label">จำหน่ายทั้งหมด (Separations)</div>
-              <div class="kpi-value text-success" id="kpiOutTotal">0</div>
-              <div class="kpi-sub">D/C <b id="kpiOutDC">0</b> | ย้าย <b id="kpiOutTO">0</b> | ReferOut <b id="kpiOutRO">0</b> | ตาย <b id="kpiOutDeath">0</b></div>
-            </div></div>
+<div class="kpi-value text-success" id="kpiOutTotal">0</div>
+<div class="kpi-sub">
+  D/C <b id="kpiOutDC">0</b> |
+  ย้ายออก <b id="kpiOutTO">0</b> |
+  หนี <b id="kpiOutAbs">0</b> |
+  ปฏิเสธ <b id="kpiOutRefu">0</b> |
+  Refer Out <b id="kpiOutRO">0</b> |
+  เสียชีวิต <b id="kpiOutDeath">0</b>
+</div></div>
 
             <div class="col-6 col-lg-3"><div class="kpi-card">
               <div class="kpi-label">คงเหลือสิ้นเดือน (EOM Census)</div>
@@ -939,13 +969,16 @@
       const inRefer = patients.filter(x => typeOf(x) === "รับ Refer").length;
       const inTotal = inNew + inTransfer + inRefer;
 
-      const outDC    = patients.filter(x => x.rawData?.[20]).length;
-      const outTO    = patients.filter(x => x.rawData?.[25]).length;
-      const outAbs   = patients.filter(x => x.rawData?.[26]).length;
-      const outRefu  = patients.filter(x => x.rawData?.[27]).length;
-      const outRO    = patients.filter(x => x.rawData?.[28]).length;
-      const outDeath = patients.filter(x => x.rawData?.[30]).length;
-      const outTotal = outDC + outTO + outAbs + outRefu + outRO + outDeath;
+      const period = getMonthPeriodFromSheetName(currentSheet);
+
+const outDC    = patients.filter(x => inMonth_(x.rawData?.[20], period)).length;
+const outTO    = patients.filter(x => inMonth_(x.rawData?.[25], period)).length;
+const outAbs   = patients.filter(x => inMonth_(x.rawData?.[26], period)).length;
+const outRefu  = patients.filter(x => inMonth_(x.rawData?.[27], period)).length;
+const outRO    = patients.filter(x => inMonth_(x.rawData?.[28], period)).length;
+const outDeath = patients.filter(x => inMonth_(x.rawData?.[30], period)).length;
+
+const outTotal = outDC + outTO + outAbs + outRefu + outRO + outDeath;
 
       const eom = patients.filter(x => x.status === "ยังรักษาอยู่").length;
 
@@ -966,10 +999,12 @@
       document.getElementById('kpiInRefer').innerText = inRefer;
 
       document.getElementById('kpiOutTotal').innerText = outTotal;
-      document.getElementById('kpiOutDC').innerText = outDC;
-      document.getElementById('kpiOutTO').innerText = outTO;
-      document.getElementById('kpiOutRO').innerText = outRO;
-      document.getElementById('kpiOutDeath').innerText = outDeath;
+document.getElementById('kpiOutDC').innerText = outDC;
+document.getElementById('kpiOutTO').innerText = outTO;
+document.getElementById('kpiOutAbs').innerText = outAbs;
+document.getElementById('kpiOutRefu').innerText = outRefu;
+document.getElementById('kpiOutRO').innerText = outRO;
+document.getElementById('kpiOutDeath').innerText = outDeath;
 
       document.getElementById('kpiEOM').innerText = eom;
       document.getElementById('kpiPatientDays').innerText = patientDays;
