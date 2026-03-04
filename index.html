@@ -1192,19 +1192,24 @@
     }
   }
 
-  async function closeMonthUI() {
-    if (!currentSheet) {
-      const {isConfirmed} = await Swal.fire({ title:'เริ่มเดือนแรก?', text:'สร้างเดือนปัจจุบันจาก Template', icon:'info', showCancelButton:true });
-      if(isConfirmed){ Swal.fire({title:'กำลังสร้าง...'}); await callApi('initFirstMonth'); initSheets(); }
-      return;
-    }
-    const res = await Swal.fire({ title:'ปิดยอดเดือน?', text:'สร้างเดือนถัดไป + ยกยอดค้าง + lock เดือนเก่า', icon:'warning', showCancelButton:true });
-    if(res.isConfirmed){
-      Swal.fire({ title:'กำลังดำเนินการ...' });
-      await callApi('closeMonthAction', { currentSheetName: currentSheet });
-      initSheets();
-    }
+ async function closeMonthUI() {
+  // ดึงค่า Default จาก Settings ถ้ามี (หรือให้ User ใส่เอง)
+  const { value: bedCount } = await Swal.fire({
+    title: 'ปิดยอดเดือน?',
+    text: 'ระบุจำนวนเตียงที่ใช้จริงในเดือนนี้:',
+    input: 'number',
+    inputValue: 20, // ค่าเริ่มต้นที่คุณใช้บ่อยที่สุด
+    showCancelButton: true,
+    confirmButtonText: 'ตกลง'
+  });
+
+  if (bedCount) {
+    Swal.fire({ title: 'กำลังดำเนินการ...', allowOutsideClick: false });
+    // ส่ง bedCount ไปด้วย
+    await callApi('closeMonthAction', { currentSheetName: currentSheet, bedCount: bedCount });
+    initSheets();
   }
+}
 </script>
 
 </body>
