@@ -43,6 +43,7 @@
       border-radius:14px;
       padding:14px;
       height:100%;
+      min-width: 220px; /* กันบีบจนคำแตก */
     }
     .kpi-label{ color:#6c757d; font-size:12px; }
     .kpi-value{ font-size:30px; font-weight:900; line-height:1.1; margin-top:4px; }
@@ -73,6 +74,9 @@
       color:#37474f;
       background:#fff;
     }
+
+    /* กัน modal มี scroll แนวนอน */
+    .modal-body{ overflow-x: hidden; }
   </style>
 </head>
 
@@ -503,30 +507,6 @@
     return d;
   }
 
-  // ================== Report helpers (Monthly period + Thai date) ==================
-function parseThaiDate(dStr){
-  if(!dStr || typeof dStr !== 'string' || !dStr.includes('/')) return null;
-  const p = dStr.split('/');
-  if(p.length < 3) return null;
-  const d = new Date(parseInt(p[2],10)-543, parseInt(p[1],10)-1, parseInt(p[0],10));
-  d.setHours(0,0,0,0);
-  return d;
-}
-
-function getMonthPeriodFromSheetName(sheetName){
-  const d0 = sheetNameToDate(sheetName);
-  if(!d0) return null;
-  const start = new Date(d0.getFullYear(), d0.getMonth(), 1); start.setHours(0,0,0,0);
-  const end = new Date(d0.getFullYear(), d0.getMonth()+1, 0); end.setHours(0,0,0,0);
-  return { start, end, daysInMonth: end.getDate() };
-}
-
-function inMonth_(thaiDateStr, period){
-  if(!period) return false;
-  const d = parseThaiDate(thaiDateStr);
-  return d && d >= period.start && d <= period.end;
-}
-
   function pickLatestSheet(names) {
     if (!Array.isArray(names) || names.length === 0) return "";
     const sorted = [...names].sort((a, b) => {
@@ -539,6 +519,30 @@ function inMonth_(thaiDateStr, period){
       return db - da;
     });
     return sorted[0];
+  }
+
+  // ================== Report helpers (Monthly period + Thai date) ==================
+  function parseThaiDate(dStr){
+    if(!dStr || typeof dStr !== 'string' || !dStr.includes('/')) return null;
+    const p = dStr.split('/');
+    if(p.length < 3) return null;
+    const d = new Date(parseInt(p[2],10)-543, parseInt(p[1],10)-1, parseInt(p[0],10));
+    d.setHours(0,0,0,0);
+    return d;
+  }
+
+  function getMonthPeriodFromSheetName(sheetName){
+    const d0 = sheetNameToDate(sheetName);
+    if(!d0) return null;
+    const start = new Date(d0.getFullYear(), d0.getMonth(), 1); start.setHours(0,0,0,0);
+    const end = new Date(d0.getFullYear(), d0.getMonth()+1, 0); end.setHours(0,0,0,0);
+    return { start, end, daysInMonth: end.getDate() };
+  }
+
+  function inMonth_(thaiDateStr, period){
+    if(!period) return false;
+    const d = parseThaiDate(thaiDateStr);
+    return d && d >= period.start && d <= period.end;
   }
 
   // ================== LOS preview (form only) ==================
@@ -852,62 +856,80 @@ function inMonth_(thaiDateStr, period){
       </div>
 
       <div class="row g-2">
-        <!-- KPI -->
+
+        <!-- KPI (แก้ layout ให้ไม่บีบ) -->
         <div class="col-12">
-          <div class="row g-2">
-            <div class="col-6 col-lg-3"><div class="kpi-card">
-              <div class="kpi-label">ยอดยกมา (BOB)</div>
-              <div class="kpi-value text-secondary" id="kpiCarry">0</div>
-              <div class="kpi-sub">ผู้ป่วยค้างจากเดือนก่อน</div>
-            </div></div>
+          <div class="row g-2 row-cols-1 row-cols-sm-2 row-cols-xl-4">
+            <div class="col">
+              <div class="kpi-card">
+                <div class="kpi-label">ยอดยกมา (BOB)</div>
+                <div class="kpi-value text-secondary" id="kpiCarry">0</div>
+                <div class="kpi-sub">ผู้ป่วยค้างจากเดือนก่อน</div>
+              </div>
+            </div>
 
-            <div class="col-6 col-lg-3"><div class="kpi-card">
-              <div class="kpi-label">รับเข้าในเดือน (Admissions)</div>
-              <div class="kpi-value text-primary" id="kpiInTotal">0</div>
-              <div class="kpi-sub">ใหม่ <b id="kpiInNew">0</b> | ย้าย <b id="kpiInTransfer">0</b> | Refer <b id="kpiInRefer">0</b></div>
-            </div></div>
+            <div class="col">
+              <div class="kpi-card">
+                <div class="kpi-label">รับเข้าในเดือน (Admissions)</div>
+                <div class="kpi-value text-primary" id="kpiInTotal">0</div>
+                <div class="kpi-sub">ใหม่ <b id="kpiInNew">0</b> | ย้าย <b id="kpiInTransfer">0</b> | Refer <b id="kpiInRefer">0</b></div>
+              </div>
+            </div>
 
-            <div class="col-6 col-lg-3"><div class="kpi-card">
-              <div class="kpi-label">จำหน่ายทั้งหมด (Separations)</div>
-<div class="kpi-value text-success" id="kpiOutTotal">0</div>
-<div class="kpi-sub">
-  D/C <b id="kpiOutDC">0</b> |
-  ย้ายออก <b id="kpiOutTO">0</b> |
-  หนี <b id="kpiOutAbs">0</b> |
-  ปฏิเสธ <b id="kpiOutRefu">0</b> |
-  Refer Out <b id="kpiOutRO">0</b> |
-  เสียชีวิต <b id="kpiOutDeath">0</b>
-</div></div>
+            <div class="col">
+              <div class="kpi-card">
+                <div class="kpi-label">จำหน่ายทั้งหมด (Separations)</div>
+                <div class="kpi-value text-success" id="kpiOutTotal">0</div>
+                <div class="kpi-sub">
+                  D/C <b id="kpiOutDC">0</b> |
+                  ย้ายออก <b id="kpiOutTO">0</b> |
+                  หนี <b id="kpiOutAbs">0</b> |
+                  ปฏิเสธ <b id="kpiOutRefu">0</b> |
+                  Refer Out <b id="kpiOutRO">0</b> |
+                  เสียชีวิต <b id="kpiOutDeath">0</b>
+                </div>
+              </div>
+            </div>
 
-            <div class="col-6 col-lg-3"><div class="kpi-card">
-              <div class="kpi-label">คงเหลือสิ้นเดือน (EOM Census)</div>
-              <div class="kpi-value text-dark" id="kpiEOM">0</div>
-              <div class="kpi-sub">ผู้ป่วยที่ยังรักษาอยู่</div>
-            </div></div>
+            <div class="col">
+              <div class="kpi-card">
+                <div class="kpi-label">คงเหลือสิ้นเดือน (EOM Census)</div>
+                <div class="kpi-value text-dark" id="kpiEOM">0</div>
+                <div class="kpi-sub">ผู้ป่วยที่ยังรักษาอยู่</div>
+              </div>
+            </div>
 
-            <div class="col-6 col-lg-3"><div class="kpi-card">
-              <div class="kpi-label">Patient Days (วันนอนรวม)</div>
-              <div class="kpi-value text-dark" id="kpiPatientDays">0</div>
-              <div class="kpi-sub">รวม LOS ที่ตัดยอดในเดือน</div>
-            </div></div>
+            <div class="col">
+              <div class="kpi-card">
+                <div class="kpi-label">Patient Days (วันนอนรวม)</div>
+                <div class="kpi-value text-dark" id="kpiPatientDays">0</div>
+                <div class="kpi-sub">รวม LOS ที่ตัดยอดในเดือน</div>
+              </div>
+            </div>
 
-            <div class="col-6 col-lg-3"><div class="kpi-card">
-              <div class="kpi-label">ALOS (จำหน่าย)</div>
-              <div class="kpi-value text-dark" id="kpiALOSOut">0.00</div>
-              <div class="kpi-sub">PatientDays / Separations</div>
-            </div></div>
+            <div class="col">
+              <div class="kpi-card">
+                <div class="kpi-label">ALOS (จำหน่าย)</div>
+                <div class="kpi-value text-dark" id="kpiALOSOut">0.00</div>
+                <div class="kpi-sub">PatientDays / Separations</div>
+              </div>
+            </div>
 
-            <div class="col-6 col-lg-3"><div class="kpi-card">
-              <div class="kpi-label">ALOS (รับเข้า)</div>
-              <div class="kpi-value text-dark" id="kpiALOSIn">0.00</div>
-              <div class="kpi-sub">PatientDays / Admissions</div>
-            </div></div>
+            <div class="col">
+              <div class="kpi-card">
+                <div class="kpi-label">ALOS (รับเข้า)</div>
+                <div class="kpi-value text-dark" id="kpiALOSIn">0.00</div>
+                <div class="kpi-sub">PatientDays / Admissions</div>
+              </div>
+            </div>
 
-            <div class="col-6 col-lg-3"><div class="kpi-card">
-              <div class="kpi-label">BOR (%)</div>
-              <div class="kpi-value text-muted">-</div>
-              <div class="kpi-sub">พักไว้ก่อน (ต้องมีเตียงรวม)</div>
-            </div></div>
+            <div class="col">
+              <div class="kpi-card">
+                <div class="kpi-label">BOR (%)</div>
+                <div class="kpi-value text-muted">-</div>
+                <div class="kpi-sub">พักไว้ก่อน (ต้องมีเตียงรวม)</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -969,16 +991,17 @@ function inMonth_(thaiDateStr, period){
       const inRefer = patients.filter(x => typeOf(x) === "รับ Refer").length;
       const inTotal = inNew + inTransfer + inRefer;
 
+      // ===== Separations (ตามข้อ 1) + fallback กัน period อ่านไม่ได้แล้วกลายเป็น 0 ทั้งหมด =====
       const period = getMonthPeriodFromSheetName(currentSheet);
 
-const outDC    = patients.filter(x => inMonth_(x.rawData?.[20], period)).length;
-const outTO    = patients.filter(x => inMonth_(x.rawData?.[25], period)).length;
-const outAbs   = patients.filter(x => inMonth_(x.rawData?.[26], period)).length;
-const outRefu  = patients.filter(x => inMonth_(x.rawData?.[27], period)).length;
-const outRO    = patients.filter(x => inMonth_(x.rawData?.[28], period)).length;
-const outDeath = patients.filter(x => inMonth_(x.rawData?.[30], period)).length;
+      const outDC    = period ? patients.filter(x => inMonth_(x.rawData?.[20], period)).length : patients.filter(x => x.rawData?.[20]).length;
+      const outTO    = period ? patients.filter(x => inMonth_(x.rawData?.[25], period)).length : patients.filter(x => x.rawData?.[25]).length;
+      const outAbs   = period ? patients.filter(x => inMonth_(x.rawData?.[26], period)).length : patients.filter(x => x.rawData?.[26]).length;
+      const outRefu  = period ? patients.filter(x => inMonth_(x.rawData?.[27], period)).length : patients.filter(x => x.rawData?.[27]).length;
+      const outRO    = period ? patients.filter(x => inMonth_(x.rawData?.[28], period)).length : patients.filter(x => x.rawData?.[28]).length;
+      const outDeath = period ? patients.filter(x => inMonth_(x.rawData?.[30], period)).length : patients.filter(x => x.rawData?.[30]).length;
 
-const outTotal = outDC + outTO + outAbs + outRefu + outRO + outDeath;
+      const outTotal = outDC + outTO + outAbs + outRefu + outRO + outDeath;
 
       const eom = patients.filter(x => x.status === "ยังรักษาอยู่").length;
 
@@ -999,12 +1022,12 @@ const outTotal = outDC + outTO + outAbs + outRefu + outRO + outDeath;
       document.getElementById('kpiInRefer').innerText = inRefer;
 
       document.getElementById('kpiOutTotal').innerText = outTotal;
-document.getElementById('kpiOutDC').innerText = outDC;
-document.getElementById('kpiOutTO').innerText = outTO;
-document.getElementById('kpiOutAbs').innerText = outAbs;
-document.getElementById('kpiOutRefu').innerText = outRefu;
-document.getElementById('kpiOutRO').innerText = outRO;
-document.getElementById('kpiOutDeath').innerText = outDeath;
+      document.getElementById('kpiOutDC').innerText = outDC;
+      document.getElementById('kpiOutTO').innerText = outTO;
+      document.getElementById('kpiOutAbs').innerText = outAbs;
+      document.getElementById('kpiOutRefu').innerText = outRefu;
+      document.getElementById('kpiOutRO').innerText = outRO;
+      document.getElementById('kpiOutDeath').innerText = outDeath;
 
       document.getElementById('kpiEOM').innerText = eom;
       document.getElementById('kpiPatientDays').innerText = patientDays;
