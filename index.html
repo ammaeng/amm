@@ -449,13 +449,34 @@
     el.innerHTML = '<option value="">-- เลือก --</option>' + (items || []).map(i => `<option value="${i}">${i}</option>`).join('');
   }
 
-  function formatDateForInput(v) {
-    if (!v || !v.includes('/')) return "";
-    const p = v.split('/');
-    let y = parseInt(p[2], 10);
-    if (y > 2400) y -= 543;
-    return `${y}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+ function formatDateForInput(v) {
+
+  if (!v) return "";
+
+  // ถ้าเป็น format yyyy-mm-dd อยู่แล้ว
+  if (typeof v === "string" && v.includes("-") && v.length >= 10) {
+    return v.substring(0,10);
   }
+
+  // รองรับ dd/mm/yyyy หรือ d/m/yyyy
+  if (typeof v === "string" && v.includes("/")) {
+
+    const p = v.split("/");
+
+    if (p.length < 3) return "";
+
+    let d = p[0].padStart(2,"0");
+    let m = p[1].padStart(2,"0");
+    let y = parseInt(p[2],10);
+
+    // แปลง พ.ศ. → ค.ศ.
+    if (y > 2400) y -= 543;
+
+    return `${y}-${m}-${d}`;
+  }
+
+  return "";
+}
 
   function formatDateForSheet(v) {
     if (!v) return "";
