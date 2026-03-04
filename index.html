@@ -1193,6 +1193,13 @@ modal.show();
 setTimeout(() => {
   modalEl.querySelector('.btn-close')?.focus();
 }, 0);
+
+  } catch(err) {
+    Swal.fire('ผิดพลาด', err.toString(), 'error');
+  }
+}
+
+    
   // ปรับแก้ปุ่มปิดเดือนให้รับค่าเตียง
   async function closeMonthUI() {
     const { value: bedCount } = await Swal.fire({
