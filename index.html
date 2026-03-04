@@ -809,7 +809,7 @@
     repChartIn = repChartOut = repChartLOS = null;
   }
 
-  function buildReportSkeleton(monthTitle){
+function buildReportSkeleton(monthTitle){
     return `
       <div class="report-note mb-2">
         <div class="d-flex flex-wrap gap-2 justify-content-between align-items-start">
@@ -818,7 +818,6 @@
             <div>• Patient Days = ผลรวม LOS ที่ตัดยอดภายในเดือน</div>
             <div>• ALOS(จำหน่าย) = Patient Days / Separations</div>
             <div>• ALOS(รับเข้า) = Patient Days / Admissions</div>
-            <div class="text-danger">• BOR ต้องใช้ “เตียงรวม” (พักไว้ก่อน)</div>
           </div>
           <div class="text-end">
             <span class="pill">เดือน: <b>${monthTitle}</b></span>
@@ -873,10 +872,11 @@
               <div class="kpi-sub">PatientDays / Admissions</div>
             </div></div>
 
+            <!-- ✅ FIX: BOR ใส่ id ให้ JS อัปเดตได้ -->
             <div class="col-6 col-lg-3"><div class="kpi-card">
               <div class="kpi-label">BOR (%)</div>
-              <div class="kpi-value text-muted">-</div>
-              <div class="kpi-sub">พักไว้ก่อน (ต้องมีเตียงรวม)</div>
+              <div class="kpi-value text-muted" id="kpiBOR">-</div>
+              <div class="kpi-sub" id="kpiBedsSub">จากจำนวนเตียง <b>-</b> เตียง</div>
             </div></div>
           </div>
         </div>
@@ -919,117 +919,6 @@
     `;
   }
 
-  function showFullReport() {
-    Swal.fire({ title: 'คำนวณรายงานสรุป...', didOpen: () => Swal.showLoading() });
-
-    callApi('getAllData', currentSheet).then(patients => {
-      patients = Array.isArray(patients) ? patients : [];
-      document.getElementById('reportMonthTitle').innerText = currentSheet;
-
-      // render skeleton first
-      destroyReportCharts();
-      document.getElementById('reportResult').innerHTML = buildReportSkeleton(currentSheet);
-
-      // ===== Compute counts =====
-      const typeOf = (item) => ((item.patientStatus || item.rawData?.[0] || "").trim());
-
-      const carry = patients.filter(x => typeOf(x) === "ยอดยกมา").length;
-      const inNew = patients.filter(x => typeOf(x) === "รับใหม่").length;
-      const inTransfer = patients.filter(x => typeOf(x) === "รับย้าย").length;
-      const inRefer = patients.filter(x => typeOf(x) === "รับ Refer").length;
-      const inTotal = inNew + inTransfer + inRefer;
-
-      const outDC    = patients.filter(x => x.rawData?.[20]).length;
-      const outTO    = patients.filter(x => x.rawData?.[25]).length;
-      const outAbs   = patients.filter(x => x.rawData?.[26]).length;
-      const outRefu  = patients.filter(x => x.rawData?.[27]).length;
-      const outRO    = patients.filter(x => x.rawData?.[28]).length;
-      const outDeath = patients.filter(x => x.rawData?.[30]).length;
-      const outTotal = outDC + outTO + outAbs + outRefu + outRO + outDeath;
-
-      const eom = patients.filter(x => x.status === "ยังรักษาอยู่").length;
-
-      const patientDays = patients.reduce((s, x) => s + (safeInt(x.displayLOS)), 0);
-
-      const alosOut = (outTotal > 0) ? (patientDays / outTotal) : 0;
-      const alosIn  = (inTotal > 0) ? (patientDays / inTotal) : 0;
-
-      const longStay = patients
-        .filter(x => safeInt(x.displayLOS) >= 30)
-        .sort((a,b)=> safeInt(b.displayLOS) - safeInt(a.displayLOS));
-
-      // ===== Fill KPI =====
-      document.getElementById('kpiCarry').innerText = carry;
-      document.getElementById('kpiInTotal').innerText = inTotal;
-      document.getElementById('kpiInNew').innerText = inNew;
-      document.getElementById('kpiInTransfer').innerText = inTransfer;
-      document.getElementById('kpiInRefer').innerText = inRefer;
-
-      document.getElementById('kpiOutTotal').innerText = outTotal;
-      document.getElementById('kpiOutDC').innerText = outDC;
-      document.getElementById('kpiOutTO').innerText = outTO;
-      document.getElementById('kpiOutRO').innerText = outRO;
-      document.getElementById('kpiOutDeath').innerText = outDeath;
-
-      document.getElementById('kpiEOM').innerText = eom;
-      document.getElementById('kpiPatientDays').innerText = patientDays;
-      document.getElementById('kpiALOSOut').innerText = alosOut.toFixed(2);
-      document.getElementById('kpiALOSIn').innerText = alosIn.toFixed(2);
-
-      document.getElementById('kpiLongStay').innerText = `${longStay.length} ราย`;
-      document.getElementById('longStayList').innerHTML = longStay.slice(0,50).map(x => {
-        const r = x.rawData || [];
-        return `
-          <div class="d-flex justify-content-between border-bottom py-2">
-            <div>
-              <div class="fw-bold">${r[11] || '-'}</div>
-              <div class="subtle">HN ${r[13]||'-'} | Ward ${r[15]||'-'} | สิทธิ ${r[17]||'-'} | สาย ${r[16]||'-'}</div>
-            </div>
-            <div class="text-danger fw-black" style="font-size:18px">${safeInt(x.displayLOS)}</div>
-          </div>
-        `;
-      }).join('') || `<div class="text-muted">ไม่มี</div>`;
-
-      // ===== Charts =====
-      repChartIn = new Chart(document.getElementById('repChartIn'), {
-        type: 'doughnut',
-        data: {
-          labels: ['รับใหม่','รับย้าย','รับ Refer'],
-          datasets: [{ data: [inNew, inTransfer, inRefer] }]
-        },
-        options: { plugins: { legend: { position: 'bottom' } } }
-      });
-
-      repChartOut = new Chart(document.getElementById('repChartOut'), {
-        type: 'doughnut',
-        data: {
-          labels: ['D/C','ย้ายออก','หนี','ปฏิเสธ','Refer Out','เสียชีวิต'],
-          datasets: [{ data: [outDC, outTO, outAbs, outRefu, outRO, outDeath] }]
-        },
-        options: { plugins: { legend: { position: 'bottom' } } }
-      });
-
-      const losBuckets = { "0":0, "1-3":0, "4-7":0, "8-14":0, "15-29":0, "30+":0 };
-      patients.forEach(x => {
-        const v = safeInt(x.displayLOS);
-        if (v === 0) losBuckets["0"]++;
-        else if (v <= 3) losBuckets["1-3"]++;
-        else if (v <= 7) losBuckets["4-7"]++;
-        else if (v <= 14) losBuckets["8-14"]++;
-        else if (v <= 29) losBuckets["15-29"]++;
-        else losBuckets["30+"]++;
-      });
-
-      repChartLOS = new Chart(document.getElementById('repChartLOS'), {
-        type:'bar',
-        data:{ labels:Object.keys(losBuckets), datasets:[{ data:Object.values(losBuckets), borderRadius: 8 }] },
-        options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } }
-      });
-
-      Swal.close();
-      new bootstrap.Modal(document.getElementById('reportModal')).show();
-    }).catch(err => Swal.fire('ผิดพลาด', err.toString(), 'error'));
-  }
 
   // ================== Edit / PDF ==================
   function editPatient(item) {
@@ -1206,16 +1095,24 @@ async function showFullReport() {
       destroyReportCharts();
       document.getElementById('reportResult').innerHTML = buildReportSkeleton(currentSheet);
 
-      // 1. แสดงผล BOR จาก Snapshot
-      if (summary) {
-        const borEl = document.getElementById('kpiBOR');
-        if(borEl) {
-          borEl.innerText = summary.bor + '%';
-          borEl.className = 'kpi-value ' + (summary.bor > 90 ? 'text-danger' : (summary.bor > 70 ? 'text-success' : 'text-primary'));
-          document.getElementById('kpiBedsSub').innerHTML = `จากจำนวนเตียง <b>${summary.beds}</b> เตียง`;
-        }
-      }
+  // 1. แสดงผล BOR จาก Snapshot
+if (summary) {
+  const borNum = parseFloat(String(summary.bor).replace('%','')) || 0;
+  const bedsNum = summary.beds ?? "-";
 
+  const borEl = document.getElementById('kpiBOR');
+  if (borEl) {
+    borEl.innerText = borNum.toFixed(2) + '%';
+    borEl.className =
+      'kpi-value ' +
+      (borNum > 90 ? 'text-danger' : (borNum > 70 ? 'text-success' : 'text-primary'));
+  }
+
+  const bedsSub = document.getElementById('kpiBedsSub');
+  if (bedsSub) {
+    bedsSub.innerHTML = `จากจำนวนเตียง <b>${bedsNum}</b> เตียง`;
+  }
+}
       // 2. คำนวณ KPI ที่เหลือ
       const typeOf = (item) => ((item.patientStatus || item.rawData?.[0] || "").trim());
       const carry = patients.filter(x => typeOf(x) === "ยอดยกมา").length;
